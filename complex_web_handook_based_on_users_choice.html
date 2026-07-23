@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Генератор промптов: Многостраничный учебный сайт</title>
   <style>
-    @import url('https://fonts.cdnfonts.com/css/inter');
 
     * {
       margin: 0;
@@ -432,8 +431,11 @@
       }
     }
   </style>
+    <link rel="stylesheet" href="assets/watercolor.css">
+    <script src="assets/app.js" defer></script>
+    <script src="assets/legacy.js" defer></script>
 </head>
-<body>
+<body data-generator="complex-web-handbook" data-detailed-original="true">
 <div class="container">
   <header>
     <h1>🌐 Генератор промптов: Учебный сайт по математике</h1>
@@ -1304,7 +1306,7 @@ ${ux.map(u => '- ' + u + ';').join('\n')}
 ==================================================
 
 Перед генерацией сайта:
-${processing.map((p, i) => (i + 1) + ') ' + p + '.';).join('\n')}
+${processing.map((p, i) => (i + 1) + ') ' + p + '.').join('\n')}
 
 Обработка ошибок из пособия: ${errorHandling}.
 
@@ -1321,7 +1323,7 @@ ${viz.length > 0 ? 'Подбирай визуализацию по содерж�
 Перед тем как вывести итоговый код, ты ОБЯЗАН выполнить внутреннюю самопроверку.
 
 Проверь:
-${audit.map((a, i) => String.fromCharCode(65 + i) + '. ' + a + '.';).join('\n')}
+${audit.map((a, i) => String.fromCharCode(65 + i) + '. ' + a + '.').join('\n')}
 
 Только после этой внутренней проверки можно выдавать итог.
 
