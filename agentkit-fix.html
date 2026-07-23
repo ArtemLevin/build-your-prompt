@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AgentKit — устранение findings</title>
+  <link rel="stylesheet" href="assets/watercolor.css">
+  <script src="assets/app.js" defer></script>
+</head>
+<body data-generator="agentkit-fix">
+<main class="page-shell">
+  <section class="hero"><p class="eyebrow">AgentKit · implementation</p><h1>Устранение findings</h1><p>Повторная верификация отчёта, минимальные исправления, regression tests и строгий контроль области изменений.</p></section>
+  <form id="promptForm">
+    <section class="form-section">
+      <h2><span class="section-number">1</span>Задача</h2>
+      <div class="form-grid">
+        <div class="form-group"><label for="project">Проект <span class="badge required">обязательно</span></label><input id="project" name="project" required placeholder="Название текущего репозитория"></div>
+        <div class="form-group"><label for="mode">Формат промпта</label><select id="mode" name="mode"><option value="detailed">развёрнутый</option><option value="battle">краткий боевой</option></select></div>
+      </div>
+      <div class="form-group"><label for="findings">Источник findings <span class="badge required">обязательно</span></label><textarea id="findings" name="findings" required placeholder="Путь к REVIEW.md, ID findings или вставленный список"></textarea></div>
+      <div class="form-group"><label for="scope">Выбранная волна исправлений</label><textarea id="scope" name="scope" placeholder="Например: все P0/P1 и P2-03; P3 не исправлять"></textarea></div>
+    </section>
+    <section class="form-section">
+      <h2><span class="section-number">2</span>Риски и поставка</h2>
+      <div class="option-grid">
+        <label><input type="checkbox" name="risks" value="потеря или повреждение данных" checked>Данные</label>
+        <label><input type="checkbox" name="risks" value="concurrency, lifecycle и shutdown" checked>Concurrency</label>
+        <label><input type="checkbox" name="risks" value="транзакции, миграции и согласованность хранилищ" checked>БД</label>
+        <label><input type="checkbox" name="risks" value="security и destructive operations" checked>Security</label>
+        <label><input type="checkbox" name="risks" value="внешние CLI, сеть и partial failure">Интеграции</label>
+        <label><input type="checkbox" name="risks" value="обратная совместимость публичных контрактов" checked>Совместимость</label>
+      </div>
+      <div class="form-grid" style="margin-top:15px">
+        <div class="form-group"><label for="checks">Команды проверки</label><textarea id="checks" name="checks" placeholder="Точечные тесты, full suite, lint, type-check, build"></textarea></div>
+        <div class="form-group"><label for="delivery">Git‑действия</label><select id="delivery" name="delivery"><option>не выполнять commit, push и PR</option><option>после успешных проверок создать ветку и draft PR, без merge</option><option>разрешены commit и push в текущую ветку, без merge</option></select></div>
+      </div>
+      <div class="form-group"><label for="constraints">Дополнительные ограничения</label><textarea id="constraints" name="constraints" placeholder="Запрещённые изменения, платформы, совместимость, лимит файлов"></textarea></div>
+    </section>
+    <div class="actions"><button class="btn" type="submit">Сформировать промпт</button><button class="btn secondary" type="button" id="resetBtn">Очистить</button></div>
+  </form>
+  <section class="output-section" id="outputSection" aria-live="polite"><h2>Готовый промпт</h2><pre class="prompt-output" id="outputText"></pre><div class="actions"><button class="btn" id="copyBtn" type="button">Скопировать</button><button class="btn secondary" id="downloadBtn" type="button">Скачать .txt</button></div><p class="status" id="status"></p></section>
+</main>
+<script>
+document.addEventListener('DOMContentLoaded', () => PromptStudio.bind({
+  build(form) {
+    const v = name => PromptStudio.value(form, name);
+    const c = name => PromptStudio.checked(form, name);
+    const common = `Проект: ${v('project')}\nИсточник findings: ${v('findings')}\n${v('scope') ? `Scope: ${v('scope')}\n` : ''}`;
+    if (v('mode') === 'battle') return `Работай с текущим репозиторием «${v('project')}» как senior software engineer. Устрани выбранные findings из: ${v('findings')}.
+${v('scope') ? `Приоритет и scope: ${v('scope')}` : 'Приоритет: P0 → P1 → явно выбранные P2; P3 не исправляй.'}
+
+Сначала прочитай AGENT(S).md, .agent/AGENT.md, .agent/agentkit.toml, релевантные skills, отчёт и корневой ./graph.json. Graphify используй только через ./graph.json; не запускай graphify/agentkit graph update/query и не используй graphify-out. Связи графа подтверждай кодом.
+
+Не принимай findings на веру: перепроверь execution path, callers, guards и тесты. Ошибочные, устаревшие или уже исправленные findings отклони с доказательством. Для подтверждённых определи invariant owner, минимальный fix и regression test.
+
+Работай от критичных рисков к менее критичным: ${c('risks').join('; ')}. Не создавай второй источник истины, silent fallback, неограниченный retry, общий rewrite или несвязанный diff. Сохраняй совместимость и исходную причину ошибок.
+
+Запускай проверки от regression test к module/caller tests, lint/type-check и full suite при изменении общего инварианта${v('checks') ? `: ${v('checks')}` : ''}. Проведи adversarial review: data loss, race/deadlock, UI blocking, rollback, повторный запуск, Windows/Unicode и partial failure.
+
+Git: ${v('delivery')}. Итог: исправленные/отклонённые findings, skills, узлы graph.json, файлы, тесты, результаты команд, compatibility impact и остаточные риски.${v('constraints') ? `\nОграничения: ${v('constraints')}` : ''}`;
+
+    return `Работай с текущим репозиторием «${v('project')}» как senior software engineer. Устрани подтверждённые блокеры и дефекты.
+
+${common}
+Приоритет: выбранные P0 → P1 → явно указанные P2. P3 не исправляй без отдельного указания. Не принимай отчёт на веру: повторно проверь каждый finding по коду, callers, guards и тестам. Ошибочный, устаревший или уже исправленный finding отклони с доказательством.
+
+1. ПОДГОТОВКА
+Прочитай AGENTS.md/AGENT.md, .agent/AGENT.md, .agent/agentkit.toml, только релевантные .agent/skills/*/SKILL.md, .agents/skills/graphify/SKILL.md, корневой ./graph.json, отчёт и документацию затронутых модулей. Выполни agentkit version --verbose, agentkit doctor, agentkit self-test, git status --short и git branch --show-current. Не затирай посторонние изменения пользователя.
+
+2. GRAPHIFY
+Работай только через ./graph.json. Не запускай graphify, agentkit graph update/query и не используй graphify-out/graph.json. Ищи узко invariant owner, entry points, callers/callees, зависимости, связанные тесты, соседние paths, hotspots и циклы. INFERRED/неоднозначные связи подтверждай кодом.
+
+3. AGENTKIT
+Выполни triage каждого finding. Активируй только необходимые skills: repository-context, requirements-contract, change-planner, implementation, verification-router, risk-based-testing, профильные review-skills, adversarial-review, delivery-summary. Deep — для P0/P1, data loss, concurrency, migrations, security и destructive operations; standard — для обычных дефектов; fast — только для изолированных низкорисковых fixes.
+
+4. ПОДТВЕРЖДЕНИЕ И ПЛАН
+До изменения кода подготовь таблицу: Finding | подтверждён | invariant owner | callers | файлы | риск | regression test | порядок. Для каждого подтверждённого finding зафиксируй воспроизводимый сценарий, ожидаемое поведение, compatibility constraints, минимальный fix и критерии готовности. Группируй только логически связанные findings.
+
+5. РЕАЛИЗАЦИЯ
+Для каждого finding проследи entry point → invariant owner, проверь callers и ближайшие тесты, добавь regression test, внеси минимальное полное исправление, выполни точечные проверки и adversarial review. Приоритетные риски:\n${c('risks').map(item => `- ${item}`).join('\n')}
+Запрещено: второй источник истины; broad except/silent fallback; неограниченный retry; изменение API/schema/config без необходимости; транзакция во время долгого I/O; блокировка UI/event loop; удаление данных для recovery; массовое форматирование; несвязанный refactor.
+
+6. СПЕЦИАЛЬНЫЕ ИНВАРИАНТЫ
+Для файлов проверь same-directory temp, flush/fsync, atomic replace, cleanup, сохранение старой версии, concurrent write и crash между операциями. Для БД — transaction boundaries, commit/rollback, constraints, migrations, busy handling, idempotency, delete/restore/purge и согласованность хранилищ. Для threads/async — ownership, affinity, shared state, cancellation, shutdown, повторный start/stop и фоновые исключения. Для интеграций — безопасные аргументы, timeout, return code, stdout/stderr, отсутствующий executable/service и partial artifacts.
+
+7. ПРОВЕРКИ
+Найди реальные команды проекта. Запускай: regression test → module tests → caller tests → lint/type-check → full suite при изменении общего инварианта → agentkit check.${v('checks') ? `\nКоманды пользователя:\n${v('checks')}` : ''} Фиксируй команду, код, длительность и результат. Не ослабляй тесты ради зелёного CI.
+
+8. ADVERSARIAL REVIEW
+Проверь, устранён ли исходный сценарий; нет ли альтернативного caller, data loss, race/deadlock/UI blocking; сохранены ли совместимость, rollback и повторный запуск; не маскируется ли ошибка; тест проверяет поведение, а не реализацию. Новые несвязанные findings только зафиксируй.
+
+9. GIT И ИТОГ
+Git: ${v('delivery')}. Перед завершением выполни git status --short, git diff --stat и git diff --check; исключи unrelated/generated/cache/secret/debug/formatting изменения.
+Выдай исправленные и отклонённые findings, использованные skills и узлы graph.json, изменённые файлы, regression tests, результаты команд, adversarial review, compatibility/migration impact, остаточные риски и следующий отдельный PR.
+${v('constraints') ? `\nДОПОЛНИТЕЛЬНЫЕ ОГРАНИЧЕНИЯ\n${v('constraints')}` : ''}`;
+  }
+}));
+</script>
+</body>
+</html>
