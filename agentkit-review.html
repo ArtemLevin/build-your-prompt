@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AgentKit — полное ревью репозитория</title>
+  <link rel="stylesheet" href="assets/watercolor.css">
+  <script src="assets/app.js" defer></script>
+</head>
+<body data-generator="agentkit-review">
+<main class="page-shell">
+  <section class="hero"><p class="eyebrow">AgentKit · read-only</p><h1>Полное ревью репозитория</h1><p>Доказательный аудит кода с использованием skills и только корневого <code>graph.json</code>.</p></section>
+  <form id="promptForm">
+    <section class="form-section">
+      <h2><span class="section-number">1</span>Проект и режим</h2>
+      <div class="form-grid">
+        <div class="form-group"><label for="project">Проект <span class="badge required">обязательно</span></label><input id="project" name="project" required placeholder="Название текущего репозитория"></div>
+        <div class="form-group"><label for="mode">Формат промпта</label><select id="mode" name="mode"><option value="detailed">развёрнутый</option><option value="battle">краткий боевой</option></select></div>
+        <div class="form-group"><label for="product">Назначение продукта</label><input id="product" name="product" placeholder="Что делает сервис и для кого"></div>
+        <div class="form-group"><label for="stack">Стек и платформа</label><input id="stack" name="stack" placeholder="Python, Qt, SQLite, web, desktop..."></div>
+      </div>
+      <div class="form-group"><label for="scope">Особый scope ревью</label><textarea id="scope" name="scope" placeholder="Подсистемы, риски, известные симптомы; пусто = весь репозиторий"></textarea></div>
+    </section>
+    <section class="form-section">
+      <h2><span class="section-number">2</span>Приоритеты и проверки</h2>
+      <div class="option-grid">
+        <label><input type="checkbox" name="areas" value="архитектура и направления зависимостей" checked>Архитектура</label>
+        <label><input type="checkbox" name="areas" value="корректность и переходы состояния" checked>Корректность</label>
+        <label><input type="checkbox" name="areas" value="concurrency, lifecycle и shutdown" checked>Concurrency</label>
+        <label><input type="checkbox" name="areas" value="данные, транзакции и файловая система" checked>Данные</label>
+        <label><input type="checkbox" name="areas" value="безопасность и модель угроз" checked>Безопасность</label>
+        <label><input type="checkbox" name="areas" value="надёжность, recovery и внешние интеграции" checked>Надёжность</label>
+        <label><input type="checkbox" name="areas" value="производительность и ресурсы">Производительность</label>
+        <label><input type="checkbox" name="areas" value="адекватность тестов по рискам" checked>Тесты</label>
+      </div>
+      <div class="form-group" style="margin-top:15px"><label for="commands">Известные команды проверки</label><textarea id="commands" name="commands" placeholder="Например: uv run pytest; uv run ruff check .; agentkit check"></textarea></div>
+      <div class="form-group"><label for="constraints">Дополнительные ограничения</label><textarea id="constraints" name="constraints" placeholder="Что не запускать, какие каталоги исключить, допустимая длительность"></textarea></div>
+    </section>
+    <div class="actions"><button class="btn" type="submit">Сформировать промпт</button><button class="btn secondary" type="button" id="resetBtn">Очистить</button></div>
+  </form>
+  <section class="output-section" id="outputSection" aria-live="polite"><h2>Готовый промпт</h2><pre class="prompt-output" id="outputText"></pre><div class="actions"><button class="btn" id="copyBtn" type="button">Скопировать</button><button class="btn secondary" id="downloadBtn" type="button">Скачать .txt</button></div><p class="status" id="status"></p></section>
+</main>
+<script>
+document.addEventListener('DOMContentLoaded', () => PromptStudio.bind({
+  build(form) {
+    const v = name => PromptStudio.value(form, name);
+    const c = name => PromptStudio.checked(form, name);
+    const context = [v('product') && `Назначение: ${v('product')}`, v('stack') && `Стек: ${v('stack')}`, v('scope') && `Особый scope: ${v('scope')}`].filter(Boolean).join('\n');
+    if (v('mode') === 'battle') return `Проведи полное read-only ревью текущего репозитория «${v('project')}» как senior software architect, security reviewer и production-readiness auditor.
+${context}
+
+Прочитай AGENT(S).md, .agent/AGENT.md, .agent/agentkit.toml, только релевантные skills, manifests, README, CI и корневой ./graph.json. Graphify используй только через ./graph.json; не запускай graphify/agentkit graph update/query и не используй graphify-out. Связи графа подтверждай кодом.
+
+Выполни triage. Проверь: ${c('areas').join('; ')}. Найди реальные команды проекта и выполни безопасные read-only проверки${v('commands') ? `, включая при наличии: ${v('commands')}` : ''}. Не меняй файлы, зависимости, Git или окружение.
+
+Каждый finding: P0–P3, файл/строки, доказательство, execution path, сценарий, последствия, минимальное исправление, regression test и уверенность. Неподтверждённое вынеси в гипотезы. Проведи adversarial перепроверку P0–P2 по callers, guards, тестам и платформенным условиям.
+
+Выдай executive summary, архитектурную карту, confirmed findings, отчёты concurrency/data/security, матрицу тестов, результаты команд, production-readiness и roadmap отдельных PR.${v('constraints') ? `\nОграничения: ${v('constraints')}` : ''}`;
+
+    return `Проведи полное read-only ревью текущего репозитория «${v('project')}» как senior software architect, security reviewer и production-readiness auditor.
+${context}
+
+Цель: найти только доказанные дефекты, архитектурные риски и существенные пробелы тестирования. Не изменяй и не форматируй код, не обновляй зависимости, не создавай commit, push или PR.
+
+1. ПОДГОТОВКА
+Прочитай AGENTS.md/AGENT.md, .agent/AGENT.md, .agent/agentkit.toml, только релевантные .agent/skills/*/SKILL.md, .agents/skills/graphify/SKILL.md, manifests, README, Makefile, CI и корневой ./graph.json. Выполни agentkit version --verbose, agentkit doctor, agentkit self-test и git status --short. Ошибки инструментов зафиксируй, но продолжай анализ, если это безопасно.
+
+2. GRAPHIFY
+Работай только через ./graph.json. Не запускай graphify, agentkit graph update/query и не используй graphify-out/graph.json. Ищи узко по entry points, символам, callers/callees, зависимостям, тестам, hotspots и циклам. Любую INFERRED или неоднозначную связь подтверждай исходным кодом; finding только по графу запрещён.
+
+3. AGENTKIT
+Выполни triage и активируй только релевантные skills: repository-context, architecture-guard, concurrency-review, database-review, security-review, risk-based-testing, verification-router, adversarial-review, delivery-summary. Укажи выбранные и отклонённые skills с причинами.
+
+4. КАРТА СИСТЕМЫ
+Определи entry points, UI/API, domain/application/services, persistence/filesystem, workers/async, integrations, configuration, observability и test boundaries. Для подсистем укажи ответственность, ключевые символы, зависимости, состояние, ресурсы, инварианты и тесты. Отметь циклы, god modules, смешение слоёв, скрытые побочные эффекты и дублирование источников истины.
+
+5. ОБЛАСТИ РЕВЬЮ
+${c('areas').map((item, i) => `${i + 1}. ${item}.`).join('\n')}
+Для concurrency finding опиши реалистичный interleaving. Для performance finding укажи горячую цепочку и практический масштаб риска. Не превращай стилистические предпочтения в дефекты.
+
+6. ПРОВЕРКИ
+Сначала найди реальные команды в manifests, Makefile, CI и документации. Затем выполни только существующие безопасные проверки.${v('commands') ? ` Предпочтительные команды пользователя:\n${v('commands')}` : ''} Для каждой команды зафиксируй код завершения, длительность и результат. Не заявляй об успехе без фактического запуска.
+
+7. FINDINGS
+P0 — потеря данных, критическая компрометация или отказ основного сценария; P1 — серьёзный реалистичный дефект/race/системный сбой; P2 — подтверждённая проблема надёжности, архитектуры, производительности или тестируемости; P3 — ограниченный технический долг.
+Каждый finding: ID/severity, файл/строки, доказательство, execution path, воспроизведение, последствия, пробел тестов, минимальное исправление, regression test, уверенность. Неподтверждённое вынеси в гипотезы.
+
+8. ADVERSARIAL REVIEW
+Попытайся опровергнуть каждый P0–P2 по callers, guards, тестам, исключениям, платформенным условиям и альтернативным путям. Удали недоказанные findings. Повторно проверь shutdown, concurrent writes, data consistency, destructive operations, crash recovery и partial failure.
+
+9. ОТЧЁТ
+Выдай: executive summary и число P0–P3; scope/evidence и использованные узлы graph.json; архитектурную карту/hotspots; findings по severity; concurrency/data/security reports; test adequacy matrix; результаты команд; technical debt по срочности; remediation roadmap отдельными PR; гипотезы; final verdict и production-readiness.
+${v('constraints') ? `\nДОПОЛНИТЕЛЬНЫЕ ОГРАНИЧЕНИЯ\n${v('constraints')}` : ''}
+
+Главное правило: каждый существенный вывод подтверждай кодом, тестом, логом, выполненной командой или воспроизводимым сценарием.`;
+  }
+}));
+</script>
+</body>
+</html>
