@@ -1,6 +1,7 @@
 import { readFile, access } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import path from 'node:path';
+import vm from 'node:vm';
 
 const root = process.cwd();
 const workflowIds = [
@@ -61,6 +62,21 @@ async function exists(relativePath) {
 }
 
 const workflowsSource = await readFile(path.join(root, 'assets/workflows.js'), 'utf8').catch(() => '');
+let workflowCatalog;
+try {
+  const sandbox = {
+    window: {},
+    PromptStudio: {
+      value(form, name, fallback = '') {
+        return String(form?.[name] ?? fallback).trim();
+      }
+    }
+  };
+  vm.runInNewContext(workflowsSource, sandbox, { filename: 'assets/workflows.js' });
+  workflowCatalog = sandbox.window.WorkflowCatalog;
+} catch (error) {
+  errors.push(`assets/workflows.js runtime error: ${error.message}`);
+}
 
 for (const page of pages) {
   const fullPath = path.join(root, page);
@@ -98,7 +114,7 @@ for (const page of pages) {
   if (workflowId) {
     if (page !== `${workflowId}.html`) errors.push(`${page}: data-workflow does not match filename`);
     if (!workflowIds.includes(workflowId)) errors.push(`${page}: workflow is absent from validator manifest`);
-    if (!workflowsSource.includes(`'${workflowId}':`)) errors.push(`${page}: workflow definition is missing`);
+    if (!workflowCatalog?.definitions?.[workflowId]) errors.push(`${page}: workflow definition is missing`);
     if (!/assets\/workflows\.js/.test(html) || !/assets\/workflow-page\.js/.test(html)) errors.push(`${page}: workflow renderer assets are not connected`);
     for (const id of ['workflowEyebrow', 'workflowTitle', 'workflowDescription', 'workflowFields']) {
       if (!ids.includes(id)) errors.push(`${page}: missing workflow shell #${id}`);
@@ -133,8 +149,42 @@ for (const asset of javascriptAssets) {
   }
 }
 
-if ((workflowsSource.match(/^\s{4}'[^']+': \{/gm) || []).length !== workflowIds.length) {
-  errors.push('workflow definition count does not match validator manifest');
+const actualIds = Object.keys(workflowCatalog?.definitions || {});
+if (actualIds.length !== workflowIds.length) errors.push(`workflow count mismatch: expected ${workflowIds.length}, got ${actualIds.length}`);
+for (const id of workflowIds) {
+  if (!actualIds.includes(id)) errors.push(`workflow definition missing: ${id}`);
+}
+for (const id of actualIds) {
+  if (!workflowIds.includes(id)) errors.push(`workflow is not represented by a page: ${id}`);
+}
+
+if (workflowCatalog) {
+  for (const [id, definition] of Object.entries(workflowCatalog.definitions)) {
+    const form = { mode: 'detailed' };
+    for (const section of definition.sections || []) {
+      for (const field of section.fields || []) form[field.name] = field.required ? `test-${field.name}` : '';
+    }
+    try {
+      const detailed = workflowCatalog.build(definition, form);
+      form.mode = 'battle';
+      const battle = workflowCatalog.build(definition, form);
+      if (detailed.length < 300) errors.push(`${id}: detailed prompt is unexpectedly short`);
+      if (battle.length < 200) errors.push(`${id}: battle prompt is unexpectedly short`);
+      if (definition.agentkit && (!detailed.includes('./graph.json') || !detailed.includes('graphify-out/graph.json'))) {
+        errors.push(`${id}: AgentKit Graphify policy is incomplete`);
+      }
+    } catch (error) {
+      errors.push(`${id}: prompt generation failed (${error.message})`);
+    }
+  }
+}
+
+try {
+  const catalogSource = await readFile(path.join(root, 'assets/catalog.js'), 'utf8');
+  if (!catalogSource.includes('Object.entries(WorkflowCatalog.definitions)')) errors.push('catalog does not derive workflow URLs from definition keys');
+  if (catalogSource.includes('item.id')) errors.push('catalog contains the invalid item.id workflow link pattern');
+} catch (error) {
+  errors.push(`assets/catalog.js validation failed: ${error.message}`);
 }
 
 if (errors.length) {
