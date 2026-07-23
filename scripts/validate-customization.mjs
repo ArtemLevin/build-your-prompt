@@ -78,7 +78,8 @@ for (const requiredFragment of [
   'value="detailed" selected',
   'развёрнутый — до 10 000 символов',
   'field.defaultValue ?? normalized[0]?.value',
-  'field.defaultValues?.length'
+  'field.defaultValues?.length',
+  "option.value === defaultValue ? ' selected' : ''"
 ]) {
   if (!rendererSource.includes(requiredFragment)) errors.push(`assets/workflow-page.js: missing ${requiredFragment}`);
 }
@@ -107,20 +108,16 @@ try {
   if (studio.limits?.detailed !== 10000) errors.push('detailed prompt limit is not 10,000');
   if (studio.limits?.battle !== 5000) errors.push('battle prompt limit is not 5,000');
 
-  const detailed = studio.fitPrompt('A'.repeat(18000), studio.limits.detailed);
-  const battle = studio.fitPrompt('B'.repeat(9000), studio.limits.battle);
+  const detailedSource = Array.from({ length: 30 }, (_, index) => `${index}: ${'A'.repeat(700)}`).join('\n');
+  const battleSource = Array.from({ length: 18 }, (_, index) => `${index}: ${'B'.repeat(500)}`).join('\n');
+  const detailed = studio.fitPrompt(detailedSource, studio.limits.detailed);
+  const battle = studio.fitPrompt(battleSource, studio.limits.battle);
   if (detailed.length > 10000) errors.push(`detailed prompt exceeds limit: ${detailed.length}`);
   if (battle.length > 5000) errors.push(`battle prompt exceeds limit: ${battle.length}`);
   if (!detailed.includes('автоматически сокращена')) errors.push('detailed compaction marker is missing');
   if (!battle.includes('автоматически сокращена')) errors.push('battle compaction marker is missing');
 } catch (error) {
   errors.push(`customization runtime validation failed: ${error.message}`);
-}
-
-const selectBlocks = [...rendererSource.matchAll(/<select[\s\S]*?<\/select>/g)].map(match => match[0]);
-if (!selectBlocks.length) errors.push('workflow renderer contains no select controls');
-for (const [index, select] of selectBlocks.entries()) {
-  if (!/selected/.test(select)) errors.push(`workflow renderer select ${index + 1} has no explicit default`);
 }
 
 if (errors.length) {
