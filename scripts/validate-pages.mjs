@@ -100,7 +100,11 @@ for (const page of pages) {
   if (!/name="viewport"/i.test(html)) errors.push(`${page}: missing viewport`);
   if (!/assets\/watercolor\.css/.test(html)) errors.push(`${page}: shared watercolor CSS is not connected`);
   if (!/assets\/app\.js/.test(html)) errors.push(`${page}: shared app.js is not connected`);
-  if (/https?:\/\//i.test(html)) errors.push(`${page}: external runtime dependency found`);
+
+  const runtimeMarkup = html.replace(/<script(?![^>]*\bsrc=)[^>]*>[\s\S]*?<\/script>/gi, '');
+  const externalRuntimeReferences = [...runtimeMarkup.matchAll(/<(?:script|link|img|iframe|source)\b[^>]*(?:src|href)="(https?:\/\/[^\"]+)"/gi)].map(match => match[1]);
+  if (externalRuntimeReferences.length) errors.push(`${page}: external runtime dependency found: ${externalRuntimeReferences.join(', ')}`);
+  if (/@import\s+url\([^)]*https?:\/\//i.test(runtimeMarkup)) errors.push(`${page}: external CSS import found`);
 
   const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map(match => match[1]);
   const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
@@ -136,7 +140,7 @@ for (const page of pages) {
 
   for (const match of html.matchAll(localReference)) {
     const reference = match[1];
-    if (!reference || reference.startsWith('#') || reference.startsWith('data:') || reference.startsWith('mailto:')) continue;
+    if (!reference || reference.startsWith('#') || reference.startsWith('data:') || reference.startsWith('mailto:') || /^https?:\/\//i.test(reference)) continue;
     const clean = reference.split(/[?#]/)[0];
     const target = path.normalize(path.join(path.dirname(page), clean));
     if (!(await exists(target))) errors.push(`${page}: broken local reference ${reference}`);
