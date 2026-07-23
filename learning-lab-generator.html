@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Учебный лабораторный стенд — Build your prompt</title>
+  <link rel="stylesheet" href="assets/watercolor.css">
+  <script src="assets/app.js" defer></script><script src="assets/workflows.js" defer></script><script src="assets/workflow-page.js" defer></script>
+</head>
+<body data-workflow="learning-lab-generator" data-generator="learning-lab-generator">
+<main class="page-shell">
+  <section class="hero"><p class="eyebrow" id="workflowEyebrow">DevOps</p><h1 id="workflowTitle">Учебный лабораторный стенд</h1><p id="workflowDescription">Загрузка генератора…</p></section>
+  <form id="promptForm"><div id="workflowFields"></div><div class="actions"><button class="btn" type="submit">Сформировать промпт</button><button class="btn secondary" type="button" id="resetBtn">Очистить</button></div></form>
+  <section class="output-section" id="outputSection" aria-live="polite"><h2>Готовый промпт</h2><pre class="prompt-output" id="outputText"></pre><div class="actions"><button class="btn" id="copyBtn" type="button">Скопировать</button><button class="btn secondary" id="downloadBtn" type="button">Скачать .txt</button></div><p class="status" id="status"></p></section>
+</main>
+</body></html>
