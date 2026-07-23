@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AgentKit — архитектура сервиса</title>
+  <link rel="stylesheet" href="assets/watercolor.css">
+  <script src="assets/app.js" defer></script>
+</head>
+<body data-generator="agentkit-architecture">
+<main class="page-shell">
+  <section class="hero"><p class="eyebrow">AgentKit · architecture</p><h1>Архитектура нового сервиса</h1><p>Заполните продуктовый бриф и получите строгий архитектурный промпт с вариантами, ADR, диаграммами и roadmap.</p></section>
+  <form id="promptForm">
+    <section class="form-section">
+      <h2><span class="section-number">1</span>Продукт</h2>
+      <div class="form-grid">
+        <div class="form-group"><label for="project">Название <span class="badge required">обязательно</span></label><input id="project" name="project" required></div>
+        <div class="form-group"><label for="mode">Формат промпта</label><select id="mode" name="mode"><option value="detailed">развёрнутый</option><option value="battle">краткий боевой</option></select></div>
+        <div class="form-group"><label for="topic">Тема и назначение <span class="badge required">обязательно</span></label><input id="topic" name="topic" required></div>
+        <div class="form-group"><label for="problem">Решаемая проблема <span class="badge required">обязательно</span></label><input id="problem" name="problem" required></div>
+      </div>
+      <div class="form-group"><label for="users">Целевые пользователи <span class="badge required">обязательно</span></label><textarea id="users" name="users" required></textarea></div>
+      <div class="form-group"><label for="scenarios">Ключевые сценарии <span class="badge required">обязательно</span></label><textarea id="scenarios" name="scenarios" required placeholder="По одному сценарию на строку"></textarea></div>
+    </section>
+
+    <section class="form-section">
+      <h2><span class="section-number">2</span>Scope и ограничения</h2>
+      <div class="form-grid">
+        <div class="form-group"><label for="mvp">Обязательный MVP <span class="badge required">обязательно</span></label><textarea id="mvp" name="mvp" required></textarea></div>
+        <div class="form-group"><label for="out">Вне scope</label><textarea id="out" name="out"></textarea></div>
+        <div class="form-group"><label for="platform">Платформа</label><input id="platform" name="platform" placeholder="Web, desktop, mobile, API, CLI"></div>
+        <div class="form-group"><label for="tech">Ограничения стека</label><textarea id="tech" name="tech" placeholder="Обязательные и запрещённые технологии"></textarea></div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2><span class="section-number">3</span>Эксплуатационный контекст</h2>
+      <div class="form-grid">
+        <div class="form-group"><label for="load">Профиль нагрузки</label><textarea id="load" name="load" placeholder="Пользователи, RPS, фоновые задачи, объёмы"></textarea></div>
+        <div class="form-group"><label for="data">Данные и хранение</label><textarea id="data" name="data" placeholder="Типы данных, критичность, retention, PII"></textarea></div>
+        <div class="form-group"><label for="integrations">Интеграции</label><textarea id="integrations" name="integrations" placeholder="API, платежи, LLM, почта, S3..."></textarea></div>
+        <div class="form-group"><label for="security">Безопасность и роли</label><textarea id="security" name="security"></textarea></div>
+        <div class="form-group"><label for="slo">SLO / RPO / RTO</label><textarea id="slo" name="slo"></textarea></div>
+        <div class="form-group"><label for="deploy">Развёртывание</label><textarea id="deploy" name="deploy" placeholder="Локально, VPS, облако, Kubernetes..."></textarea></div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2><span class="section-number">4</span>Организация работы</h2>
+      <div class="form-grid">
+        <div class="form-group"><label for="team">Команда и сроки</label><textarea id="team" name="team"></textarea></div>
+        <div class="form-group"><label for="existing">Текущее состояние</label><textarea id="existing" name="existing" placeholder="Greenfield или существующий репозиторий/legacy"></textarea></div>
+        <div class="form-group"><label for="delivery">Ожидаемый результат</label><select id="delivery" name="delivery"><option>архитектурный документ, ADR и roadmap без реализации</option><option>архитектура и каркас репозитория</option><option>архитектура с детальным планом PR</option><option>оценка и развитие существующей архитектуры</option></select></div>
+        <div class="form-group"><label for="extra">Дополнительные ограничения</label><textarea id="extra" name="extra"></textarea></div>
+      </div>
+    </section>
+
+    <div class="actions"><button class="btn" type="submit">Сформировать промпт</button><button class="btn secondary" type="button" id="resetBtn">Очистить</button></div>
+  </form>
+  <section class="output-section" id="outputSection" aria-live="polite"><h2>Готовый промпт</h2><pre class="prompt-output" id="outputText"></pre><div class="actions"><button class="btn" id="copyBtn" type="button">Скопировать</button><button class="btn secondary" id="downloadBtn" type="button">Скачать .txt</button></div><p class="status" id="status"></p></section>
+</main>
+<script>
+document.addEventListener('DOMContentLoaded', () => PromptStudio.bind({
+  build(form) {
+    const v = name => PromptStudio.value(form, name);
+    const lines = name => v(name).split(/\r?\n/).map(item => item.trim()).filter(Boolean).map(item => `- ${item}`).join('\n');
+    const brief = `Название: ${v('project')}\nТема: ${v('topic')}\nПроблема: ${v('problem')}\nПользователи: ${v('users')}\nСценарии:\n${lines('scenarios')}\nMVP: ${v('mvp')}\nВне scope: ${v('out') || 'не задано'}\nПлатформа: ${v('platform') || 'не задана'}\nСтек: ${v('tech') || 'не задан'}\nНагрузка: ${v('load') || 'не задана'}\nДанные: ${v('data') || 'не заданы'}\nИнтеграции: ${v('integrations') || 'нет данных'}\nБезопасность: ${v('security') || 'базовые требования по модели угроз'}\nSLO/RPO/RTO: ${v('slo') || 'не заданы'}\nРазвёртывание: ${v('deploy') || 'не задано'}\nКоманда и сроки: ${v('team') || 'не заданы'}\nТекущее состояние: ${v('existing') || 'greenfield'}\nРезультат: ${v('delivery')}\nДополнительно: ${v('extra') || 'нет'}`;
+
+    if (v('mode') === 'battle') return `Спроектируй архитектуру сервиса «${v('project')}» в рамках AgentKit.
+
+ВХОДНЫЕ ДАННЫЕ
+${brief}
+
+При пропущенных данных зафиксируй допущения и продолжай. Если репозиторий существует, прочитай AGENT(S).md, .agent/agentkit.toml, релевантные skills, manifests, README, CI и корневой ./graph.json. Graphify используй только через ./graph.json; не запускай команды Graphify и не используй graphify-out. Связи подтверждай кодом.
+
+Выполни triage. Не реализуй production-код и не выполняй commit, push, PR или deployment.
+
+Подготовь: requirements contract и non-goals; 2–3 варианта с trade-offs; рекомендуемый вариант и ADR; Mermaid system context/component/sequence/deployment; bounded contexts, модули, зависимости, invariant owners и sources of truth; данные, транзакции, migrations, backup/retention; API/events, timeout/retry/idempotency; threat model; failure modes, recovery, observability, SLO и rollback; capacity model и пороги масштабирования; risk-based test strategy; дерево репозитория; roadmap этапов/PR; риски, open decisions и критерии готовности.
+
+По умолчанию предпочитай модульный монолит. Не добавляй микросервисы, Kubernetes, event sourcing, очередь, кэш или абстракции без доказанной необходимости. Для каждого решения укажи причину, альтернативу, компромиссы, риск и условие пересмотра.`;
+
+    return `Работай как senior software architect и solution architect. Спроектируй архитектуру сервиса «${v('project')}» в рамках AgentKit.
+
+ВХОДНОЙ БРИФ
+${brief}
+
+Если поля не заполнены, не останавливайся: перечисли разумные допущения, их влияние и условия пересмотра. Не представляй допущения как требования пользователя. На этом этапе не реализуй production-код, не обновляй зависимости и не выполняй commit, push, PR или deployment.
+
+1. ПОДГОТОВКА
+Для существующего репозитория прочитай AGENT(S).md, .agent/AGENT.md, .agent/agentkit.toml, только релевантные skills, manifests, README, архитектурные документы, CI и корневой ./graph.json. Выполни доступные read-only проверки AgentKit и git status. Ошибки инструментов зафиксируй.
+
+2. AGENTKIT И GRAPHIFY
+Выполни triage; рассмотри repository-context, requirements-contract, architecture-guard, database/security/concurrency review, change-planner, risk-based-testing и delivery-summary. Активируй только необходимые skills. При наличии ./graph.json используй его как навигационный индекс существующей системы. Не запускай graphify, agentkit graph update/query и не используй graphify-out. INFERRED связи подтверждай кодом.
+
+3. REQUIREMENTS CONTRACT
+Раздели бизнес-цели, роли, use cases, функциональные/нефункциональные требования, ограничения, success criteria, неизвестные параметры, допущения и non-goals. Не придумывай высокую нагрузку или сложную инфраструктуру без основания.
+
+4. АРХИТЕКТУРНЫЕ СИЛЫ
+Оцени размер команды, скорость выпуска, нагрузку, критичность данных, offline/online, latency, concurrency, интеграции, стоимость эксплуатации, безопасность, переносимость, тестируемость, observability и recovery. Для неизвестных чисел дай диапазоны и пороги смены архитектуры.
+
+5. ВАРИАНТЫ
+Предложи 2–3 реалистичных варианта. Для каждого: структура, плюсы/минусы, сложность, стоимость эксплуатации, масштабирование, риски и условия выбора. По умолчанию предпочитай модульный монолит. Микросервисы допустимы только при независимом масштабировании, автономных командах или разных operational requirements. Выбери вариант и зафиксируй отвергнутые альтернативы как ADR.
+
+6. ЦЕЛЕВАЯ АРХИТЕКТУРА
+Опиши system context, процессы/контейнеры, bounded contexts, модули, направление зависимостей, публичные/внутренние интерфейсы, invariant owners, sync/async взаимодействия, background jobs, transaction boundaries, sources of truth, caching, integrations, configuration, error handling, idempotency и graceful shutdown. Дай Mermaid: context, component/container, sequence главного сценария и deployment.
+
+7. ДАННЫЕ И КОНТРАКТЫ
+Спроектируй сущности, связи, lifecycle, indexes/constraints, транзакции, migrations, delete/retention, backup/restore и согласованность БД/файлов/внешних хранилищ. Для API/events опиши DTO, версионирование, ошибки, timeout, retry, idempotency, rate limits и partial failure.
+
+8. SECURITY И OPERATIONS
+Сформируй threat model: authn/authz, roles, secrets, validation, paths/subprocess, encryption, audit, privacy и supply chain. Раздели MVP и future hardening. Опиши failure modes, health/readiness, crash recovery, logging/metrics/tracing/alerts, SLO/error budget, deployment и rollback. Не добавляй компоненты без оправдания стоимости.
+
+9. CAPACITY И ТЕСТЫ
+Дай capacity model: нагрузка, storage, bottlenecks, CPU/I/O, workers и точки вертикального/горизонтального масштабирования. Укажи сигналы усложнения. Построй risk-based test strategy: unit, contract, integration, database, concurrency, E2E, security, performance, migration, backup/restore и smoke.
+
+10. СТРУКТУРА И ROADMAP
+Предложи дерево репозитория; для верхнеуровневых модулей укажи ответственность, разрешённые/запрещённые зависимости, публичную поверхность и владельца состояния. Раздели реализацию на независимые этапы/PR с целью, scope, компонентами, зависимостями, тестами, рисками, rollback и DoD.
+
+11. ИТОГ
+Выдай executive summary; требования/допущения; архитектурные силы; варианты; recommended architecture/ADR; диаграммы; components/dependencies; data model; contracts/integrations; security; reliability/observability/deployment; capacity; tests; repository structure; roadmap; risk register; open decisions; architecture readiness criteria.
+
+Принципы: минимальная достаточная сложность; один владелец каждого инварианта; один source of truth на тип данных; явные границы; только доказанные abstractions; соответствие архитектуры продукту и команде; причина, альтернатива и условие пересмотра для каждого решения.`;
+  }
+}));
+</script>
+</body>
+</html>
