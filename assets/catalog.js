@@ -23,9 +23,9 @@
   };
 
   function allTools() {
-    const generated = Object.values(WorkflowCatalog.definitions).map(item => ({
+    const generated = Object.entries(WorkflowCatalog.definitions).map(([id, item]) => ({
       category: item.category,
-      href: `${item.id}.html`,
+      href: `${id}.html`,
       icon: item.icon,
       title: item.title,
       description: item.description,
@@ -41,6 +41,12 @@
     </a>`;
   }
 
+  function scrollToHash() {
+    if (!location.hash) return;
+    const target = document.querySelector(location.hash);
+    if (target) requestAnimationFrame(() => target.scrollIntoView({ block: 'start' }));
+  }
+
   function render(filter = '') {
     const query = filter.trim().toLowerCase();
     const tools = allTools().filter(tool => !query || [tool.title, tool.description, tool.tag, labels[tool.category]].join(' ').toLowerCase().includes(query));
@@ -54,10 +60,12 @@
       </section>`;
     }).join('') || '<section class="panel"><h2>Ничего не найдено</h2><p>Измените поисковый запрос.</p></section>';
     document.getElementById('catalogCount').textContent = `${tools.length} генераторов`;
+    scrollToHash();
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     render();
     document.getElementById('catalogSearch')?.addEventListener('input', event => render(event.currentTarget.value));
+    window.addEventListener('hashchange', scrollToHash);
   });
 })();
