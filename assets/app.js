@@ -1,19 +1,14 @@
 (() => {
   'use strict';
 
-  const pages = [
+  const navItems = [
     ['index.html', 'Каталог'],
-    ['poster.html', 'Инфографика'],
-    ['web.html', 'Web-эквивалент'],
-    ['latex_code_based.html', 'LaTeX'],
-    ['excersizes_based_on_user_choice.html', 'Упражнения'],
-    ['complex_web_handook_based_on_users_choice.html', 'Web-пособие'],
-    ['hometask.html', 'Домашняя работа'],
-    ['agentkit-review.html', 'AgentKit: ревью'],
-    ['agentkit-fix.html', 'AgentKit: исправления'],
-    ['agentkit-architecture.html', 'AgentKit: архитектура']
+    ['index.html#education', 'Образование'],
+    ['index.html#students', 'Ученики'],
+    ['index.html#agentkit', 'AgentKit'],
+    ['index.html#devops', 'DevOps'],
+    ['index.html#ai', 'AI']
   ];
-
   const fileName = location.pathname.split('/').pop() || 'index.html';
 
   function injectNavigation() {
@@ -21,8 +16,8 @@
     const nav = document.createElement('nav');
     nav.className = 'site-nav';
     nav.setAttribute('aria-label', 'Основная навигация');
-    const links = pages.map(([href, label]) => {
-      const current = fileName === href ? ' aria-current="page"' : '';
+    const links = navItems.map(([href, label], index) => {
+      const current = fileName === 'index.html' && index === 0 ? ' aria-current="page"' : '';
       return `<a href="${href}"${current}>${label}</a>`;
     }).join('');
     nav.innerHTML = `<div class="nav-inner">
@@ -36,7 +31,7 @@
     if (document.querySelector('.footer')) return;
     const footer = document.createElement('footer');
     footer.className = 'footer';
-    footer.textContent = 'Локальная библиотека генераторов промптов · без внешних зависимостей';
+    footer.textContent = 'Локальная библиотека генераторов промптов · без внешних runtime-зависимостей';
     document.body.append(footer);
   }
 
@@ -60,9 +55,7 @@
 
   function block(title, content, empty = 'не задано') {
     const normalized = Array.isArray(content) ? content.filter(Boolean) : String(content || '').trim();
-    if (Array.isArray(normalized)) {
-      return `${title}:\n${normalized.length ? normalized.map(item => `- ${item}`).join('\n') : `- ${empty}`}`;
-    }
+    if (Array.isArray(normalized)) return `${title}:\n${normalized.length ? normalized.map(item => `- ${item}`).join('\n') : `- ${empty}`}`;
     return `${title}: ${normalized || empty}`;
   }
 
@@ -116,10 +109,7 @@
 
   function downloadPrompt() {
     const text = document.getElementById('outputText')?.textContent || '';
-    if (!text.trim()) {
-      setStatus('Сначала сформируйте промпт.', true);
-      return;
-    }
+    if (!text.trim()) return setStatus('Сначала сформируйте промпт.', true);
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -131,21 +121,10 @@
     URL.revokeObjectURL(url);
   }
 
-  function storageKey() {
-    return `build-your-prompt:${fileName}`;
-  }
-
-  function storageGet(key) {
-    try { return localStorage.getItem(key); } catch { return null; }
-  }
-
-  function storageSet(key, valueToStore) {
-    try { localStorage.setItem(key, valueToStore); } catch { /* storage is optional */ }
-  }
-
-  function storageRemove(key) {
-    try { localStorage.removeItem(key); } catch { /* storage is optional */ }
-  }
+  function storageKey() { return `build-your-prompt:${fileName}`; }
+  function storageGet(key) { try { return localStorage.getItem(key); } catch { return null; } }
+  function storageSet(key, storedValue) { try { localStorage.setItem(key, storedValue); } catch { /* optional */ } }
+  function storageRemove(key) { try { localStorage.removeItem(key); } catch { /* optional */ } }
 
   function saveDraft(form) {
     const data = {};
@@ -156,9 +135,7 @@
         if (element.checked) data[element.name].push(element.value);
       } else if (element.type === 'radio') {
         if (element.checked) data[element.name] = element.value;
-      } else {
-        data[element.name] = element.value;
-      }
+      } else data[element.name] = element.value;
     }
     storageSet(storageKey(), JSON.stringify(data));
   }
@@ -198,8 +175,5 @@
   }
 
   window.PromptStudio = { bind, checked, value, list, block, setOutput, copyText };
-  document.addEventListener('DOMContentLoaded', () => {
-    injectNavigation();
-    injectFooter();
-  });
+  document.addEventListener('DOMContentLoaded', () => { injectNavigation(); injectFooter(); });
 })();
