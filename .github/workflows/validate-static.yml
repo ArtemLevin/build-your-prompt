@@ -6,15 +6,31 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Validate HTML, links and JavaScript
+      - name: Restore protected detailed generators
+        run: node scripts/restore-detailed-generators.mjs
+      - name: Validate HTML, links, prompts and JavaScript
         run: node scripts/validate-pages.mjs
+      - name: Commit presentation-only restoration
+        if: github.event_name == 'push'
+        run: |
+          if git diff --quiet -- poster.html web.html latex_code_based.html excersizes_based_on_user_choice.html complex_web_handook_based_on_users_choice.html hometask.html; then
+            echo "Detailed generators are already synchronized."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add poster.html web.html latex_code_based.html excersizes_based_on_user_choice.html complex_web_handook_based_on_users_choice.html hometask.html
+          git commit -m "fix: preserve detailed generators with shared presentation [skip ci]"
+          git push
