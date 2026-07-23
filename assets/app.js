@@ -41,13 +41,14 @@
   }
 
   function checked(form, name) {
-    return [...form.querySelectorAll(`[name="${CSS.escape(name)}"]:checked`)].map(el => el.value);
+    const safeName = String(name).replace(/["\\]/g, '\\$&');
+    return [...form.querySelectorAll(`[name="${safeName}"]:checked`)].map(element => element.value);
   }
 
   function value(form, name, fallback = '') {
     const field = form.elements.namedItem(name);
     if (!field) return fallback;
-    if (field instanceof RadioNodeList) return field.value || fallback;
+    if (typeof RadioNodeList !== 'undefined' && field instanceof RadioNodeList) return field.value || fallback;
     return String(field.value || fallback).trim();
   }
 
@@ -65,6 +66,13 @@
     return `${title}: ${normalized || empty}`;
   }
 
+  function setStatus(message, isError = false) {
+    const status = document.getElementById('status');
+    if (!status) return;
+    status.textContent = message;
+    status.style.color = isError ? '#9b4f5a' : '';
+  }
+
   function setOutput(text) {
     const output = document.getElementById('outputText');
     const section = document.getElementById('outputSection');
@@ -73,13 +81,6 @@
     section.classList.add('visible');
     section.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setStatus('Промпт сформирован. Проверьте значения перед копированием.');
-  }
-
-  function setStatus(message, isError = false) {
-    const status = document.getElementById('status');
-    if (!status) return;
-    status.textContent = message;
-    status.style.color = isError ? '#9b4f5a' : '';
   }
 
   async function copyText(text) {
@@ -109,7 +110,7 @@
       setStatus('Промпт скопирован в буфер обмена.');
       setTimeout(() => { button.textContent = original; }, 1600);
     } catch (error) {
-      setStatus(error.message, true);
+      setStatus(error instanceof Error ? error.message : 'Не удалось скопировать текст', true);
     }
   }
 
@@ -134,6 +135,18 @@
     return `build-your-prompt:${fileName}`;
   }
 
+  function storageGet(key) {
+    try { return localStorage.getItem(key); } catch { return null; }
+  }
+
+  function storageSet(key, valueToStore) {
+    try { localStorage.setItem(key, valueToStore); } catch { /* storage is optional */ }
+  }
+
+  function storageRemove(key) {
+    try { localStorage.removeItem(key); } catch { /* storage is optional */ }
+  }
+
   function saveDraft(form) {
     const data = {};
     for (const element of form.elements) {
@@ -147,16 +160,16 @@
         data[element.name] = element.value;
       }
     }
-    localStorage.setItem(storageKey(), JSON.stringify(data));
+    storageSet(storageKey(), JSON.stringify(data));
   }
 
   function restoreDraft(form) {
     let data;
-    try { data = JSON.parse(localStorage.getItem(storageKey()) || 'null'); } catch { return; }
+    try { data = JSON.parse(storageGet(storageKey()) || 'null'); } catch { return; }
     if (!data) return;
     for (const element of form.elements) {
       if (!element.name || !(element.name in data)) continue;
-      if (element.type === 'checkbox') element.checked = data[element.name].includes(element.value);
+      if (element.type === 'checkbox') element.checked = Array.isArray(data[element.name]) && data[element.name].includes(element.value);
       else if (element.type === 'radio') element.checked = data[element.name] === element.value;
       else element.value = data[element.name];
     }
@@ -172,13 +185,13 @@
       event.preventDefault();
       if (!form.reportValidity()) return;
       try { setOutput(build(form)); }
-      catch (error) { setStatus(`Ошибка генерации: ${error.message}`, true); }
+      catch (error) { setStatus(`Ошибка генерации: ${error instanceof Error ? error.message : 'неизвестная ошибка'}`, true); }
     });
     document.getElementById('copyBtn')?.addEventListener('click', event => handleCopy(event.currentTarget));
     document.getElementById('downloadBtn')?.addEventListener('click', downloadPrompt);
     document.getElementById('resetBtn')?.addEventListener('click', () => {
       form.reset();
-      localStorage.removeItem(storageKey());
+      storageRemove(storageKey());
       document.getElementById('outputSection')?.classList.remove('visible');
       setStatus('Форма очищена.');
     });
