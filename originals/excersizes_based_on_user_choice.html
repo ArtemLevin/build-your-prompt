@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Генератор промптов: Контрольная работа</title>
+  <style>
+    @import url('https://fonts.cdnfonts.com/css/inter');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0b10;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      padding: 45px 20px;
+      background: linear-gradient(135deg, #1a1025 0%, #0f1a2e 50%, #0a1628 100%);
+      border-radius: 20px;
+      margin-bottom: 28px;
+      border: 1px solid #2a2040;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 50%, rgba(70, 130, 180, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 70% 50%, rgba(220, 20, 60, 0.04) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #60a5fa, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative;
+    }
+
+    header p {
+      opacity: 0.6;
+      font-size: 0.92rem;
+      position: relative;
+    }
+
+    .form-section {
+      background: #12131a;
+      border-radius: 16px;
+      padding: 26px;
+      margin-bottom: 16px;
+      border: 1px solid #1e2030;
+      transition: border-color 0.3s;
+    }
+
+    .form-section:hover {
+      border-color: #2a2d45;
+    }
+
+    .form-section h2 {
+      font-size: 1rem;
+      color: #c084fc;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #1e2030;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: #1e2030;
+      color: #94a3b8;
+      font-size: 0.68rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .badge.required {
+      background: #2d1530;
+      color: #e879f9;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 7px;
+      color: #cbd5e1;
+      font-size: 0.87rem;
+    }
+
+    .form-group label .hint {
+      font-weight: 400;
+      color: #4a5568;
+      font-size: 0.77rem;
+    }
+
+    input[type="text"], input[type="number"], select, textarea {
+      width: 100%;
+      padding: 11px 15px;
+      background: #0a0b10;
+      border: 2px solid #1e2030;
+      border-radius: 10px;
+      font-size: 0.87rem;
+      color: #e2e8f0;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: inherit;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #c084fc;
+      box-shadow: 0 0 0 3px rgba(192, 132, 252, 0.12);
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: #3a3f52;
+    }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 38px;
+    }
+
+    select option {
+      background: #12131a;
+      color: #e2e8f0;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 15px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .checkbox-item {
+      position: relative;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      display: none;
+    }
+
+    .checkbox-item label {
+      display: inline-block;
+      padding: 7px 14px;
+      background: #0a0b10;
+      border: 2px solid #1e2030;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      user-select: none;
+      color: #7c8598;
+    }
+
+    .checkbox-item label:hover {
+      border-color: #c084fc;
+      color: #e2e8f0;
+    }
+
+    .checkbox-item input[type="checkbox"]:checked + label {
+      background: #c084fc;
+      color: #0a0b10;
+      border-color: #c084fc;
+      font-weight: 600;
+    }
+
+    .radio-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .radio-item {
+      position: relative;
+    }
+
+    .radio-item input[type="radio"] {
+      display: none;
+    }
+
+    .radio-item label {
+      display: inline-block;
+      padding: 7px 14px;
+      background: #0a0b10;
+      border: 2px solid #1e2030;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      user-select: none;
+      color: #7c8598;
+    }
+
+    .radio-item label:hover {
+      border-color: #60a5fa;
+      color: #e2e8f0;
+    }
+
+    .radio-item input[type="radio"]:checked + label {
+      background: #60a5fa;
+      color: #0a0b10;
+      border-color: #60a5fa;
+      font-weight: 600;
+    }
+
+    .custom-input-wrapper {
+      margin-top: 8px;
+    }
+
+    .custom-input-wrapper input {
+      border-style: dashed;
+      font-style: italic;
+      font-size: 0.82rem;
+    }
+
+    .btn-generate {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #c084fc, #60a5fa);
+      color: #0a0b10;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 26px;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-generate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(192, 132, 252, 0.25);
+    }
+
+    .btn-generate:active {
+      transform: translateY(0);
+    }
+
+    .output-section {
+      display: none;
+      background: #12131a;
+      border-radius: 16px;
+      padding: 26px;
+      margin-top: 26px;
+      border: 1px solid #1e2030;
+    }
+
+    .output-section.visible {
+      display: block;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .output-section h2 {
+      font-size: 1.1rem;
+      color: #c084fc;
+      margin-bottom: 13px;
+    }
+
+    .output-text {
+      background: #0a0b10;
+      border: 1px solid #1e2030;
+      border-radius: 10px;
+      padding: 20px;
+      white-space: pre-wrap;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      max-height: 600px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      color: #94a3b8;
+    }
+
+    .btn-copy {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 13px;
+      padding: 11px 22px;
+      background: #22c55e;
+      color: #0a0b10;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.87rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-copy:hover {
+      background: #16a34a;
+      transform: translateY(-1px);
+    }
+
+    .btn-copy.copied {
+      background: #4a5568;
+      color: #e2e8f0;
+    }
+
+    .section-icon {
+      width: 23px;
+      height: 23px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #c084fc;
+      color: #0a0b10;
+      border-radius: 6px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .collapsible-header {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .collapsible-header .arrow {
+      transition: transform 0.3s;
+      font-size: 0.75rem;
+      color: #4a5568;
+    }
+
+    .collapsible-header.open .arrow {
+      transform: rotate(180deg);
+    }
+
+    .collapsible-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+
+    .collapsible-content.open {
+      max-height: 5000px;
+    }
+
+    .topics-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .topic-item {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .topic-item input {
+      flex: 1;
+    }
+
+    .topic-item .remove-topic {
+      width: 28px;
+      height: 28px;
+      background: #2d1520;
+      color: #f87171;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .topic-item .remove-topic:hover {
+      background: #5c2020;
+    }
+
+    .add-topic-btn {
+      padding: 6px 14px;
+      background: #1e2030;
+      color: #94a3b8;
+      border: 1px dashed #2a2d45;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+      margin-top: 4px;
+    }
+
+    .add-topic-btn:hover {
+      border-color: #c084fc;
+      color: #c084fc;
+    }
+
+    .difficulty-legend {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .difficulty-card {
+      padding: 10px 14px;
+      background: #0a0b10;
+      border: 1px solid #1e2030;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    .difficulty-card strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.82rem;
+    }
+
+    .difficulty-card.basic strong { color: #4ade80; }
+    .difficulty-card.advanced strong { color: #facc15; }
+    .difficulty-card.olympic strong { color: #f87171; }
+
+    @media (max-width: 768px) {
+      .two-col, .three-col, .difficulty-legend {
+        grid-template-columns: 1fr;
+      }
+      header h1 {
+        font-size: 1.4rem;
+      }
+      .form-section {
+        padding: 18px;
+      }
+      body {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>📝 Генератор промптов: Контрольная работа</h1>
+    <p>Настройте параметры и получите готовый промпт для генерации контрольной работы</p>
+  </header>
+
+  <form id="promptForm">
+    <!-- ОСНОВНЫЕ ПАРАМЕТРЫ -->
+    <div class="form-section">
+      <h2><span class="section-icon">1</span> Основные параметры <span class="badge required">обязательно</span></h2>
+      <div class="two-col">
+        <div class="form-group">
+          <label>Предмет</label>
+          <select id="subject">
+            <option value="алгебра" selected>алгебра</option>
+            <option value="геометрия">геометрия</option>
+            <option value="математика">математика</option>
+            <option value="физика">физика</option>
+            <option value="химия">химия</option>
+            <option value="информатика">информатика</option>
+          </select>
+          <div class="custom-input-wrapper">
+            <input type="text" id="subjectCustom" placeholder="Свой предмет...">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Класс</label>
+          <select id="grade">
+            <option value="5">5 класс</option>
+            <option value="6">6 класс</option>
+            <option value="7">7 класс</option>
+            <option value="8">8 класс</option>
+            <option value="9" selected>9 класс</option>
+            <option value="10">10 класс</option>
+            <option value="11">11 класс</option>
+          </select>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="form-group">
+          <label>Тема контрольной работы</label>
+          <input type="text" id="topic" placeholder="Например: неравенства повышенной сложности" value="неравенства повышенной сложности">
+        </div>
+        <div class="form-group">
+          <label>Экзамен (если применимо)</label>
+          <select id="exam">
+            <option value="">не применимо</option>
+            <option value="ОГЭ" selected>ОГЭ</option>
+            <option value="ЕГЭ">ЕГЭ</option>
+            <option value="ВПР">ВПР</option>
+            <option value="олимпиада">олимпиада</option>
+          </select>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="form-group">
+          <label>Количество задач на каждую тему</label>
+          <select id="count">
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5" selected>5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Уровень сложности</label>
+          <select id="level">
+            <option value="базовый">базовый</option>
+            <option value="повышенный">повышенный</option>
+            <option value="углубленный" selected>углубленный</option>
+            <option value="олимпиадный">олимпиадный</option>
+            <option value="смешанный (базовый + углублённый)">смешанный</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ПОДТЕМЫ -->
+    <div class="form-section">
+      <h2><span class="section-icon">2</span> Подтемы (список [Темы]) <span class="badge required">обязательно</span></h2>
+      <div class="form-group">
+        <label>Перечислите подтемы, по которым нужно составить задачи <span class="hint">(каждая подтема получит указанное количество задач)</span></label>
+        <div class="topics-list" id="topicsList">
+          <div class="topic-item">
+            <input type="text" value="Линейные неравенства" placeholder="Подтема...">
+            <button type="button" class="remove-topic" onclick="removeTopic(this)">×</button>
+          </div>
+          <div class="topic-item">
+            <input type="text" value="Квадратные неравенства" placeholder="Подтема...">
+            <button type="button" class="remove-topic" onclick="removeTopic(this)">×</button>
+          </div>
+          <div class="topic-item">
+            <input type="text" value="Рациональные неравенства (метод интервалов)" placeholder="Подтема...">
+            <button type="button" class="remove-topic" onclick="removeTopic(this)">×</button>
+          </div>
+          <div class="topic-item">
+            <input type="text" value="Неравенства с модулем" placeholder="Подтема...">
+            <button type="button" class="remove-topic" onclick="removeTopic(this)">×</button>
+          </div>
+          <div class="topic-item">
+            <input type="text" value="Системы неравенств" placeholder="Подтема...">
+            <button type="button" class="remove-topic" onclick="removeTopic(this)">×</button>
+          </div>
+        </div>
+        <button type="button" class="add-topic-btn" onclick="addTopic()">+ Добавить подтему</button>
+      </div>
+    </div>
+
+    <!-- ГРАДАЦИЯ СЛОЖНОСТИ -->
+    <div class="form-section">
+      <h2 class="collapsible-header open" onclick="toggleCollapsible(this)">
+        <span><span class="section-icon">3</span> Градация сложности</span>
+        <span class="arrow">▼</span>
+      </h2>
+      <div class="collapsible-content open">
+        <div class="form-group">
+          <label>Распределение задач по уровням сложности</label>
+          <div class="radio-group">
+            <div class="radio-item">
+              <input type="radio" id="dist1" name="distribution" value="все задачи одного уровня ([Уровень])" checked>
+              <label for="dist1">все одного уровня</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="dist2" name="distribution" value="смешанное распределение по всем трём уровням">
+              <label for="dist2">смешанное</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="dist3" name="distribution" value="с нарастающей сложностью">
+              <label for="dist3">нарастающая</label>
+            </div>
+          </div>
+        </div>
+        <div class="difficulty-legend">
+          <div class="difficulty-card basic">
+            <strong>базовый</strong>
+            прямое применение формулы/алгоритма
+          </div>
+          <div class="difficulty-card advanced">
+            <strong>углублённый</strong>
+            5–6 логических шагов, возможна «замаскированная» данность
+          </div>
+          <div class="difficulty-card olympic">
+            <strong>олимпиадный</strong>
+            нетривиальная интерпретация условия или выбор рационального метода
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ТРЕБОВАНИЯ К ЗАДАЧАМ -->
+    <div class="form-section">
+      <h2 class="collapsible-header open" onclick="toggleCollapsible(this)">
+        <span><span class="section-icon">4</span> Требования к задачам</span>
+        <span class="arrow">▼</span>
+      </h2>
+      <div class="collapsible-content open">
+        <div class="form-group">
+          <label>Обязательные требования</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="req1" name="requirements" value="разнообразие: задачи охватывают разные аспекты темы и включают минимум 3 различных сюжета" checked>
+              <label for="req1">разнообразие сюжетов</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="req2" name="requirements" value="корректность: однозначное решение в рамках школьной программы; запрещено использование методов/понятий, выходящих за рамки программы" checked>
+              <label for="req2">корректность</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="req3" name="requirements" value="реалистичность: числовые данные и контекст корректны (скорость пешехода 4–6 км/ч, КПД ≤ 100 % и т.д.)" checked>
+              <label for="req3">реалистичность</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="req4" name="requirements" value="оформление: каждая задача — законченный абзац с чётким вопросом; единицы измерения указаны корректно; без двусмысленностей" checked>
+              <label for="req4">оформление</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="req5" name="requirements" value="геометрия: построения и конфигурации непротиворечивы">
+              <label for="req5">геом. непротиворечивость</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="req6" name="requirements" value="алгебра: корректные числа, в результате вычислений получаются корректные числа" checked>
+              <label for="req6">корректные числа</label>
+            </div>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="form-group">
+            <label>Минимум различных сюжетов</label>
+            <select id="minPlots">
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Формат вывода</label>
+            <div class="radio-group">
+              <div class="radio-item">
+                <input type="radio" id="out1" name="output" value="нумерованный список (1.–N.)" checked>
+                <label for="out1">нумерованный</label>
+              </div>
+              <div class="radio-item">
+                <input type="radio" id="out2" name="output" value="группировка по подтемам">
+                <label for="out2">по подтемам</label>
+              </div>
+              <div class="radio-item">
+                <input type="radio" id="out3" name="output" value="таблица">
+                <label for="out3">таблица</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Решения и ответы</label>
+          <div class="radio-group">
+            <div class="radio-item">
+              <input type="radio" id="ans1" name="answers" value="не приводите" checked>
+              <label for="ans1">не приводить</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="ans2" name="answers" value="приведите только ответы">
+              <label for="ans2">только ответы</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="ans3" name="answers" value="приведите полные решения и ответы">
+              <label for="ans3">решения + ответы</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="ans4" name="answers" value="приведите ответы в отдельном блоке в конце">
+              <label for="ans4">ответы в конце</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ТРЕБОВАНИЯ К ОФОРМЛЕНИЮ -->
+    <div class="form-section">
+      <h2 class="collapsible-header" onclick="toggleCollapsible(this)">
+        <span><span class="section-icon">5</span> Требования к оформлению</span>
+        <span class="arrow">▼</span>
+      </h2>
+      <div class="collapsible-content">
+        <div class="form-group">
+          <label>Типографские требования</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="fmt1" name="formatting" value="для русскоязычных документов: неразрывные пробелы перед % и единицами измерения (25~%, 5~кг)" checked>
+              <label for="fmt1">неразрывные пробелы</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="fmt2" name="formatting" value="корректные размерности и реалистичные числовые значения" checked>
+              <label for="fmt2">корректные размерности</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="fmt3" name="formatting" value="использование принятой школьной терминологии" checked>
+              <label for="fmt3">школьная терминология</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="fmt4" name="formatting" value="избегать двусмысленностей в формулировках" checked>
+              <label for="fmt4">без двусмысленностей</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="fmt5" name="formatting" value="каждое условие — законченный абзац">
+              <label for="fmt5">законченный абзац</label>
+            </div>
+          </div>
+        </div>
+        <div class="custom-input-wrapper">
+          <input type="text" id="formattingCustom" placeholder="Дополнительные требования к оформлению...">
+        </div>
+      </div>
+    </div>
+
+    <!-- ДОПОЛНИТЕЛЬНО -->
+    <div class="form-section">
+      <h2 class="collapsible-header" onclick="toggleCollapsible(this)">
+        <span><span class="section-icon">6</span> Дополнительно</span>
+        <span class="arrow">▼</span>
+      </h2>
+      <div class="collapsible-content">
+        <div class="form-group">
+          <label>Дополнительные указания <span class="hint">(необязательно)</span></label>
+          <textarea id="extraNotes" rows="3" placeholder="Например: включить задачи с параметром, использовать реальные данные из статистики..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Язык вывода</label>
+          <div class="radio-group">
+            <div class="radio-item">
+              <input type="radio" id="lang1" name="lang" value="русский" checked>
+              <label for="lang1">русский</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="lang2" name="lang" value="английский">
+              <label for="lang2">английский</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="btn-generate" onclick="generatePrompt()">
+      ✨ Сгенерировать промпт
+    </button>
+  </form>
+
+  <div class="output-section" id="outputSection">
+    <h2>📋 Готовый промпт</h2>
+    <div class="output-text" id="outputText"></div>
+    <button class="btn-copy" id="copyBtn" onclick="copyPrompt()">
+      📎 Скопировать промпт
+    </button>
+  </div>
+</div>
+
+<script>
+  function getCheckedValues(name) {
+    const checkboxes = document.querySelectorAll(`input[name="${name}"]:checked`);
+    return Array.from(checkboxes).map(cb => cb.value);
+  }
+
+  function getRadioValue(name) {
+    const radio = document.querySelector(`input[name="${name}"]:checked`);
+    return radio ? radio.value : '';
+  }
+
+  function toggleCollapsible(header) {
+    header.classList.toggle('open');
+    const content = header.nextElementSibling;
+    content.classList.toggle('open');
+  }
+
+  function addTopic() {
+    const container = document.getElementById('topicsList');
+    const div = document.createElement('div');
+    div.className = 'topic-item';
+    div.innerHTML = `
+                <input type="text" value="" placeholder="Подтема...">
+                <button type="button" class="remove-topic" onclick="removeTopic(this)">×</button>
+            `;
+    container.appendChild(div);
+    div.querySelector('input').focus();
+  }
+
+  function removeTopic(btn) {
+    const container = document.getElementById('topicsList');
+    if (container.children.length > 1) {
+      btn.parentElement.remove();
+    }
+  }
+
+  function generatePrompt() {
+    const subjectCustom = document.getElementById('subjectCustom').value.trim();
+    const subject = subjectCustom || document.getElementById('subject').value;
+    const grade = document.getElementById('grade').value;
+    const topic = document.getElementById('topic').value.trim() || '[Тема]';
+    const exam = document.getElementById('exam').value;
+    const count = document.getElementById('count').value;
+    const level = document.getElementById('level').value;
+
+    // Topics
+    const topicInputs = document.querySelectorAll('#topicsList input[type="text"]');
+    const topics = Array.from(topicInputs).map(inp => inp.value.trim()).filter(v => v);
+
+    // Distribution
+    const distribution = getRadioValue('distribution');
+
+    // Requirements
+    const requirements = getCheckedValues('requirements');
+    const minPlots = document.getElementById('minPlots').value;
+    const output = getRadioValue('output');
+    const answers = getRadioValue('answers');
+
+    // Formatting
+    const formatting = getCheckedValues('formatting');
+    const formattingCustom = document.getElementById('formattingCustom').value.trim();
+
+    // Extra
+    const extraNotes = document.getElementById('extraNotes').value.trim();
+    const lang = getRadioValue('lang');
+
+    // Build class label
+    let classLabel = grade + ' класс';
+    if (exam) {
+      classLabel += ', ' + exam;
+    }
+
+    // Build topics string
+    const topicsStr = topics.length > 0 ? topics.join(', ') : '[Темы]';
+
+    let prompt = `
+
+[Предмет]: ${subject}
+
+[Тема]: контрольная работа по теме ${topic}
+
+[Уровень]: ${level}
+
+[Количество]: ${count}
+
+[Класс]: ${classLabel}
+
+[Темы]: ${topicsStr}
+`;
+
+    if (formatting.length > 0 || formattingCustom) {
+      prompt += `
+[Требования к оформлению]:
+`;
+      formatting.forEach(f => {
+        prompt += `• ${f};\n`;
+      });
+      if (formattingCustom) {
+        prompt += `• ${formattingCustom};\n`;
+      }
+    }
+
+    prompt += `
+
+Создайте по [Количество] упражнений по каждой упомянутой теме из списка ([Темы]) для ${grade} класса, уровень сложности — ${level}.
+
+`;
+
+    if (distribution !== 'все задачи одного уровня ([Уровень])') {
+      prompt += `Распределение задач: ${distribution}.
+
+`;
+    }
+
+    prompt += `Требования к задачам:
+
+`;
+
+    let reqNum = 1;
+
+    if (requirements.some(r => r.includes('разнообразие'))) {
+      prompt += `${reqNum}. Разнообразие: задачи должны охватывать разные аспекты темы и включать минимум ${minPlots} различных сюжет${minPlots === '2' ? 'а' : minPlots === '3' ? 'а' : 'ов'}.
+
+`;
+      reqNum++;
+    }
+
+    if (requirements.some(r => r.includes('корректность') && !r.includes('числа'))) {
+      prompt += `${reqNum}. Корректность: каждая задача должна иметь однозначное решение в рамках школьной программы ${grade} класса; запрещено использование методов/понятий, выходящих за рамки программы.
+
+`;
+      reqNum++;
+    }
+
+    if (requirements.some(r => r.includes('реалистичность'))) {
+      prompt += `${reqNum}. Реалистичность: числовые данные и контекст должны быть корректны (например, скорость пешехода 4–6 км/ч, КПД ≤ 100 % — если речь идет о прикладных задачах, задачах по физике и т.д.; геометрия — построения и конфигурации должны быть непротиворечивы; алгебра — должны использоваться корректные числа, в результате вычислений должны получаться корректные числа).
+
+`;
+      reqNum++;
+    }
+
+    if (requirements.some(r => r.includes('геометрия'))) {
+      prompt += `${reqNum}. Геометрическая корректность: построения и конфигурации должны быть непротиворечивы.
+
+`;
+      reqNum++;
+    }
+
+    prompt += `${reqNum}. Градация сложности:
+
+`;
+    reqNum++;
+
+    if (distribution === 'все задачи одного уровня ([Уровень])') {
+      prompt += ` • все задачи — уровень «${level}».
+
+`;
+    } else if (distribution === 'с нарастающей сложностью') {
+      prompt += ` • базовый — прямое применение формулы/алгоритма;
+ • углублённый — 5–6 логических шагов, возможна «замаскированная» данность;
+ • олимпиадный — нетривиальная интерпретация условия или необходимость выбора рационального метода.
+
+Задачи располагаются с нарастающей сложностью.
+
+`;
+    } else {
+      prompt += ` • базовый — прямое применение формулы/алгоритма;
+ • углублённый — 5–6 логических шагов, возможна «замаскированная» данность;
+ • олимпиадный — нетривиальная интерпретация условия или необходимость выбора рационального метода.
+
+`;
+    }
+
+    if (requirements.some(r => r.includes('оформление'))) {
+      prompt += `${reqNum}. Оформление: каждая задача — законченный абзац с чётким вопросом; единицы измерения указываются корректно; избегайте двусмысленностей.
+
+`;
+      reqNum++;
+    }
+
+    if (output === 'нумерованный список (1.–N.)') {
+      const total = topics.length * parseInt(count);
+      prompt += `Выведите задачи нумерованным списком (например: 1.–${total > 0 ? total : 'N'}.). `;
+    } else if (output === 'группировка по подтемам') {
+      prompt += `Выведите задачи, сгруппированные по подтемам, с нумерацией внутри каждой группы. `;
+    } else {
+      prompt += `Выведите задачи в виде таблицы с колонками: номер, подтема, условие. `;
+    }
+
+    if (answers === 'не приводите') {
+      prompt += `Решения и ответы не приводите.`;
+    } else if (answers === 'приведите только ответы') {
+      prompt += `Приведите только ответы (без решений) отдельным блоком в конце.`;
+    } else if (answers === 'приведите полные решения и ответы') {
+      prompt += `Приведите полные решения и ответы для каждой задачи.`;
+    } else {
+      prompt += `Приведите ответы отдельным блоком в конце.`;
+    }
+
+    if (extraNotes) {
+      prompt += `
+
+
+Дополнительные указания:
+${extraNotes}`;
+    }
+
+    if (lang !== 'русский') {
+      prompt += `
+
+
+Язык вывода: ${lang}.`;
+    }
+
+    document.getElementById('outputText').textContent = prompt;
+    document.getElementById('outputSection').classList.add('visible');
+    document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function copyPrompt() {
+    const text = document.getElementById('outputText').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✅ Скопировано!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '📎 Скопировать промпт';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+</script>
+</body>
+</html>

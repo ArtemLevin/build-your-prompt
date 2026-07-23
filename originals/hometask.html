@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Генератор промптов: Домашнее задание</title>
+  <style>
+    @import url('https://fonts.cdnfonts.com/css/inter');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0b10;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1150px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      padding: 48px 20px;
+      background: linear-gradient(135deg, #1a1025 0%, #0f1a2e 50%, #0a1628 100%);
+      border-radius: 20px;
+      margin-bottom: 28px;
+      border: 1px solid #2a2040;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 50%, rgba(70, 130, 180, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 70% 50%, rgba(220, 20, 60, 0.04) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #60a5fa, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      position: relative;
+    }
+
+    header p {
+      opacity: 0.6;
+      font-size: 0.92rem;
+      position: relative;
+    }
+
+    .form-section {
+      background: #12131a;
+      border-radius: 16px;
+      padding: 26px;
+      margin-bottom: 16px;
+      border: 1px solid #1e2030;
+      transition: border-color 0.3s;
+    }
+
+    .form-section:hover {
+      border-color: #2a2d45;
+    }
+
+    .form-section h2 {
+      font-size: 1rem;
+      color: #c084fc;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #1e2030;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: #1e2030;
+      color: #94a3b8;
+      font-size: 0.68rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .badge.required {
+      background: #2d1530;
+      color: #e879f9;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 7px;
+      color: #cbd5e1;
+      font-size: 0.87rem;
+    }
+
+    .form-group label .hint {
+      font-weight: 400;
+      color: #4a5568;
+      font-size: 0.77rem;
+    }
+
+    input[type="text"], input[type="number"], select, textarea {
+      width: 100%;
+      padding: 11px 15px;
+      background: #0a0b10;
+      border: 2px solid #1e2030;
+      border-radius: 10px;
+      font-size: 0.87rem;
+      color: #e2e8f0;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: inherit;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #c084fc;
+      box-shadow: 0 0 0 3px rgba(192, 132, 252, 0.12);
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: #3a3f52;
+    }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 38px;
+    }
+
+    select option {
+      background: #12131a;
+      color: #e2e8f0;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 15px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .checkbox-item {
+      position: relative;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      display: none;
+    }
+
+    .checkbox-item label {
+      display: inline-block;
+      padding: 7px 14px;
+      background: #0a0b10;
+      border: 2px solid #1e2030;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      user-select: none;
+      color: #7c8598;
+    }
+
+    .checkbox-item label:hover {
+      border-color: #c084fc;
+      color: #e2e8f0;
+    }
+
+    .checkbox-item input[type="checkbox"]:checked + label {
+      background: #c084fc;
+      color: #0a0b10;
+      border-color: #c084fc;
+      font-weight: 600;
+    }
+
+    .radio-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .radio-item {
+      position: relative;
+    }
+
+    .radio-item input[type="radio"] {
+      display: none;
+    }
+
+    .radio-item label {
+      display: inline-block;
+      padding: 7px 14px;
+      background: #0a0b10;
+      border: 2px solid #1e2030;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      user-select: none;
+      color: #7c8598;
+    }
+
+    .radio-item label:hover {
+      border-color: #60a5fa;
+      color: #e2e8f0;
+    }
+
+    .radio-item input[type="radio"]:checked + label {
+      background: #60a5fa;
+      color: #0a0b10;
+      border-color: #60a5fa;
+      font-weight: 600;
+    }
+
+    .custom-input-wrapper {
+      margin-top: 8px;
+    }
+
+    .custom-input-wrapper input {
+      border-style: dashed;
+      font-style: italic;
+      font-size: 0.82rem;
+    }
+
+    .btn-generate {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #c084fc, #60a5fa);
+      color: #0a0b10;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 26px;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-generate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(192, 132, 252, 0.25);
+    }
+
+    .btn-generate:active {
+      transform: translateY(0);
+    }
+
+    .output-section {
+      display: none;
+      background: #12131a;
+      border-radius: 16px;
+      padding: 26px;
+      margin-top: 26px;
+      border: 1px solid #1e2030;
+    }
+
+    .output-section.visible {
+      display: block;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .output-section h2 {
+      font-size: 1.1rem;
+      color: #c084fc;
+      margin-bottom: 13px;
+    }
+
+    .output-text {
+      background: #0a0b10;
+      border: 1px solid #1e2030;
+      border-radius: 10px;
+      padding: 20px;
+      white-space: pre-wrap;
+      font-size: 0.8rem;
+      line-height: 1.65;
+      max-height: 600px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      color: #94a3b8;
+    }
+
+    .btn-copy {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 13px;
+      padding: 11px 22px;
+      background: #22c55e;
+      color: #0a0b10;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.87rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-copy:hover {
+      background: #16a34a;
+      transform: translateY(-1px);
+    }
+
+    .btn-copy.copied {
+      background: #4a5568;
+      color: #e2e8f0;
+    }
+
+    .section-icon {
+      width: 23px;
+      height: 23px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #c084fc;
+      color: #0a0b10;
+      border-radius: 6px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .collapsible-header {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .collapsible-header .arrow {
+      transition: transform 0.3s;
+      font-size: 0.75rem;
+      color: #4a5568;
+    }
+
+    .collapsible-header.open .arrow {
+      transform: rotate(180deg);
+    }
+
+    .collapsible-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+
+    .collapsible-content.open {
+      max-height: 10000px;
+    }
+
+    .topics-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .topic-item {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .topic-item input {
+      flex: 1;
+    }
+
+    .topic-item .remove-topic {
+      width: 28px;
+      height: 28px;
+      background: #2d1520;
+      color: #f87171;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .topic-item .remove-topic:hover {
+      background: #5c2020;
+    }
+
+    .add-topic-btn {
+      padding: 6px 14px;
+      background: #1e2030;
+      color: #94a3b8;
+      border: 1px dashed #2a2d45;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+      margin-top: 4px;
+    }
+
+    .add-topic-btn:hover {
+      border-color: #c084fc;
+      color: #c084fc;
+    }
+
+    .info-box {
+      background: #0f1520;
+      border: 1px solid #1e3040;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-top: 12px;
+      margin-bottom: 12px;
+      font-size: 0.82rem;
+      color: #7c9ab8;
+      line-height: 1.6;
+    }
+
+    .info-box strong {
+      color: #60a5fa;
+    }
+
+    .divider {
+      height: 1px;
+      background: #1e2030;
+      margin: 16px 0;
+    }
+
+    @media (max-width: 768px) {
+      .two-col, .three-col {
+        grid-template-columns: 1fr;
+      }
+      header h1 {
+        font-size: 1.4rem;
+      }
+      .form-section {
+        padding: 18px;
+      }
+      body {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>⚛️ Генератор промптов: Домашнее задание по физике</h1>
+    <p>Настройте параметры и получите готовый промпт для составления экзаменационного варианта</p>
+  </header>
+
+  <form id="promptForm">
+    <!-- 1. ОСНОВНЫЕ ПАРАМЕТРЫ -->
+    <div class="form-section">
+      <h2><span class="section-icon">1</span> Основные параметры <span class="badge required">обязательно</span></h2>
+      <div class="two-col">
+        <div class="form-group">
+          <label>Предмет</label>
+          <select id="subject">
+            <option value="физика" selected>физика</option>
+            <option value="математика">математика</option>
+            <option value="химия">химия</option>
+            <option value="информатика">информатика</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Количество задач</label>
+          <select id="taskCount">
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5" selected>5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="10">10</option>
+            <option value="12">12</option>
+            <option value="15">15</option>
+            <option value="20">20</option>
+          </select>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="form-group">
+          <label>Общий уровень сложности</label>
+          <select id="difficulty">
+            <option value="базовый">базовый</option>
+            <option value="средний">средний</option>
+            <option value="задачи повышенной сложности ОГЭ" selected>повышенная сложность ОГЭ</option>
+            <option value="высокий вступительный уровень">высокий вступительный</option>
+            <option value="олимпиадный">олимпиадный</option>
+            <option value="смешанный (от базового к высокому)">смешанный</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Цель варианта</label>
+          <select id="goal">
+            <option value="Подготовка к сдаче ОГЭ по физике" selected>Подготовка к ОГЭ</option>
+            <option value="Подготовка к сдаче ЕГЭ по физике">Подготовка к ЕГЭ</option>
+            <option value="Подготовка к ВПР">Подготовка к ВПР</option>
+            <option value="Подготовка к МЦКО">Подготовка к МЦКО</option>
+            <option value="Подготовка к вступительным испытаниям в лицей">Вступительные в лицей</option>
+            <option value="Текущая контрольная работа">Контрольная работа</option>
+            <option value="Самостоятельная тренировка">Самостоятельная тренировка</option>
+            <option value="Пробный экзамен">Пробный экзамен</option>
+            <option value="Диагностическая работа">Диагностическая работа</option>
+          </select>
+          <div class="custom-input-wrapper">
+            <input type="text" id="goalCustom" placeholder="Своя цель...">
+          </div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="form-group">
+          <label>Формат экзамена</label>
+          <select id="examFormat">
+            <option value="письменный" selected>письменный</option>
+            <option value="тестовый">тестовый</option>
+            <option value="комбинированный">комбинированный</option>
+            <option value="устный">устный</option>
+            <option value="компьютерный">компьютерный</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Время на выполнение</label>
+          <select id="timeLimit">
+            <option value="30 минут">30 минут</option>
+            <option value="40 минут">40 минут</option>
+            <option value="45 минут">45 минут</option>
+            <option value="1 час" selected>1 час</option>
+            <option value="1,5 часа">1,5 часа</option>
+            <option value="2 часа">2 часа</option>
+            <option value="2,5 часа">2,5 часа</option>
+            <option value="3 часа">3 часа</option>
+            <option value="3,5 часа">3,5 часа</option>
+            <option value="4 часа">4 часа</option>
+            <option value="без ограничений">без ограничений</option>
+          </select>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="form-group">
+          <label>Номер варианта</label>
+          <input type="number" id="variantNumber" value="1" min="1" max="99">
+        </div>
+        <div class="form-group">
+          <label>Олимпиадность</label>
+          <div class="radio-group">
+            <div class="radio-item">
+              <input type="radio" id="olymp1" name="olymp" value="нет" checked>
+              <label for="olymp1">нет</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="olymp2" name="olymp" value="частично">
+              <label for="olymp2">частично</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="olymp3" name="olymp" value="да">
+              <label for="olymp3">да</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. РАЗДЕЛЫ И ТЕМЫ -->
+    <div class="form-section">
+      <h2><span class="section-icon">2</span> Разделы и темы <span class="badge required">обязательно</span></h2>
+      <div class="form-group">
+        <label>Разделы (обязательные темы)</label>
+        <div class="topics-list" id="requiredTopics">
+          <div class="topic-item">
+            <input type="text" value="теплообмен" placeholder="Раздел / тема...">
+            <button type="button" class="remove-topic" onclick="removeTopic(this, 'requiredTopics')">×</button>
+          </div>
+        </div>
+        <button type="button" class="add-topic-btn" onclick="addTopic('requiredTopics')">+ Добавить обязательную тему</button>
+      </div>
+      <div class="form-group">
+        <label>Дополнительные темы <span class="hint">(можно включить по желанию)</span></label>
+        <div class="topics-list" id="optionalTopics">
+          <div class="topic-item">
+            <input type="text" value="тепловой баланс" placeholder="Дополнительная тема...">
+            <button type="button" class="remove-topic" onclick="removeTopic(this, 'optionalTopics')">×</button>
+          </div>
+          <div class="topic-item">
+            <input type="text" value="фазовые переходы" placeholder="Дополнительная тема...">
+            <button type="button" class="remove-topic" onclick="removeTopic(this, 'optionalTopics')">×</button>
+          </div>
+          <div class="topic-item">
+            <input type="text" value="влажность воздуха" placeholder="Дополнительная тема...">
+            <button type="button" class="remove-topic" onclick="removeTopic(this, 'optionalTopics')">×</button>
+          </div>
+        </div>
+        <button type="button" class="add-topic-btn" onclick="addTopic('optionalTopics')">+ Добавить доп. тему</button>
+      </div>
+    </div>
+
+    <!-- 3. ТИПЫ ЗАДАЧ -->
+    <div class="form-section">
+      <h2 class="collapsible-header open" onclick="toggleCollapsible(this)">
+        <span><span class="section-icon">3</span> Включение типов задач</span>
+        <span class="arrow">▼</span>
+      </h2>
+      <div class="collapsible-content open">
+        <div class="form-group">
+          <label>Какие типы задач включить</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="inc1" name="includes" value="задания с параметром">
+              <label for="inc1">с параметром</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="inc2" name="includes" value="текстовые задачи">
+              <label for="inc2">текстовые задачи</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="inc3" name="includes" value="графики и функции">
+              <label for="inc3">графики и функции</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="inc4" name="includes" value="системы уравнений/неравенств" checked>
+              <label for="inc4">системы уравнений</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="inc5" name="includes" value="экспериментальные задачи">
+              <label for="inc5">экспериментальные</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="inc6" name="includes" value="качественные вопросы">
+              <label for="inc6">качественные</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="inc7" name="includes" value="расчётные задачи" checked>
+              <label for="inc7">расчётные</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="inc8" name="includes" value="задачи на анализ графиков">
+              <label for="inc8">анализ графиков</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="inc9" name="includes" value="задачи на оценку и порядок величин">
+              <label for="inc9">оценка величин</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="inc10" name="includes" value="задачи с неоднозначными данными">
+              <label for="inc10">неоднозначные данные</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. ЧТО ПРОВЕРЯТЬ -->
+    <div class="form-section">
+      <h2 class="collapsible-header open" onclick="toggleCollapsible(this)">
+        <span><span class="section-icon">4</span> Что проверять</span>
+        <span class="arrow">▼</span>
+      </h2>
+      <div class="collapsible-content open">
+        <div class="form-group">
+          <label>Проверяемые навыки и умения</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="skill1" name="skills" value="аккуратность преобразований" checked>
+              <label for="skill1">аккуратность преобразований</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="skill2" name="skills" value="владение ОДЗ" checked>
+              <label for="skill2">владение ОДЗ</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="skill3" name="skills" value="умение исследовать случаи" checked>
+              <label for="skill3">исследование случаев</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="skill4" name="skills" value="навык решения уравнений и неравенств" checked>
+              <label for="skill4">уравнения и неравенства</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="skill5" name="skills" value="логическая строгость" checked>
+              <label for="skill5">логическая строгость</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="skill6" name="skills" value="способность работать с параметром">
+              <label for="skill6">работа с параметром</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="skill7" name="skills" value="умение строить математическую модель в текстовой задаче">
+              <label for="skill7">мат. модель</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="skill8" name="skills" value="знание формул" checked>
+              <label for="skill8">знание формул</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="skill9" name="skills" value="физическая интерпретация результата" checked>
+              <label for="skill9">физ. интерпретация</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="skill10" name="skills" value="работа с единицами измерения" checked>
+              <label for="skill10">единицы измерения</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="skill11" name="skills" value="умение делать выводы из эксперимента">
+              <label for="skill11">выводы из эксперимента</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="skill12" name="skills" value="графическая грамотность">
+              <label for="skill12">графическая грамотность</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="skill13" name="skills" value="оценка порядка величин">
+              <label for="skill13">оценка порядка</label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Если уровень высокий, включай задачи, где требуется</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="adv1" name="advanced" value="замена переменной">
+              <label for="adv1">замена переменной</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="adv2" name="advanced" value="разложение на множители">
+              <label for="adv2">разложение на множители</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="adv3" name="advanced" value="рациональные преобразования">
+              <label for="adv3">рациональные преобразования</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="adv4" name="advanced" value="метод интервалов">
+              <label for="adv4">метод интервалов</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="adv5" name="advanced" value="анализ расположения корней">
+              <label for="adv5">анализ корней</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="adv6" name="advanced" value="исследование модуля">
+              <label for="adv6">исследование модуля</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="adv7" name="advanced" value="условия на корни при параметре">
+              <label for="adv7">условия при параметре</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="adv8" name="advanced" value="анализ граничных случаев">
+              <label for="adv8">граничные случаи</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="adv9" name="advanced" value="составление системы из нескольких уравнений">
+              <label for="adv9">системы из нескольких ур.</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="adv10" name="advanced" value="оптимизация и поиск экстремума">
+              <label for="adv10">оптимизация</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. СТРУКТУРА СЛОЖНОСТИ -->
+    <div class="form-section">
+      <h2 class="collapsible-header open" onclick="toggleCollapsible(this)">
+        <span><span class="section-icon">5</span> Структура сложности</span>
+        <span class="arrow">▼</span>
+      </h2>
+      <div class="collapsible-content open">
+        <div class="info-box">
+          <strong>Подсказка:</strong> Укажите диапазоны номеров задач для каждого уровня сложности. Например: 1–2, 3–4, 5.
+        </div>
+        <div class="three-col">
+          <div class="form-group">
+            <label>Лёгкие задачи <span class="hint">(базовый/средний)</span></label>
+            <input type="text" id="easyRange" value="1–2" placeholder="например: 1–2">
+          </div>
+          <div class="form-group">
+            <label>Средние задачи <span class="hint">(повышенный)</span></label>
+            <input type="text" id="mediumRange" value="3–4" placeholder="например: 3–4">
+          </div>
+          <div class="form-group">
+            <label>Сложные задачи <span class="hint">(вступительный)</span></label>
+            <input type="text" id="hardRange" value="5" placeholder="например: 5">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Распределение по темам</label>
+          <div class="radio-group">
+            <div class="radio-item">
+              <input type="radio" id="dist1" name="distribution" value="нарастающая сложность" checked>
+              <label for="dist1">нарастающая сложность</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="dist2" name="distribution" value="сбалансированное по темам">
+              <label for="dist2">сбалансированное</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="dist3" name="distribution" value="случайное перемешивание">
+              <label for="dist3">случайное</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="dist4" name="distribution" value="блоками по темам">
+              <label for="dist4">блоками по темам</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. ЧТО ВКЛЮЧИТЬ В ВЫВОД -->
+    <div class="form-section">
+      <h2 class="collapsible-header open" onclick="toggleCollapsible(this)">
+        <span><span class="section-icon">6</span> Что включить в вывод</span>
+        <span class="arrow">▼</span>
+      </h2>
+      <div class="collapsible-content open">
+        <div class="form-group">
+          <label>Сопроводительные материалы</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="out1" name="output" value="ответы" checked>
+              <label for="out1">ответы</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="out2" name="output" value="полные решения">
+              <label for="out2">полные решения</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="out3" name="output" value="краткие указания/идеи решения">
+              <label for="out3">краткие указания</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="out4" name="output" value="критерии оценивания">
+              <label for="out4">критерии оценивания</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="out5" name="output" value="разбалловка">
+              <label for="out5">разбалловка</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="out6" name="output" value="типичные ошибки">
+              <label for="out6">типичные ошибки</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="out7" name="output" value="комментарии к каждому заданию">
+              <label for="out7">комментарии</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="out8" name="output" value="рекомендации по подготовке">
+              <label for="out8">рекомендации</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. КЛАССЫ И РАМКИ ПРОГРАММЫ -->
+    <div class="form-section">
+      <h2 class="collapsible-header open" onclick="toggleCollapsible(this)">
+        <span><span class="section-icon">7</span> Классы и рамки программы</span>
+        <span class="arrow">▼</span>
+      </h2>
+      <div class="collapsible-content open">
+        <div class="two-col">
+          <div class="form-group">
+            <label>Класс, из которого приходит ученик</label>
+            <select id="classFrom">
+              <option value="5">5 класс</option>
+              <option value="6">6 класс</option>
+              <option value="7" selected>7 класс</option>
+              <option value="8">8 класс</option>
+              <option value="9">9 класс</option>
+              <option value="10">10 класс</option>
+              <option value="11">11 класс</option>
+            </select>
+            <div class="custom-input-wrapper">
+              <input type="text" id="classFromCustom" placeholder="Свой класс...">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Класс, в который поступает / для которого составлен вариант</label>
+            <select id="classTo">
+              <option value="5">5 класс</option>
+              <option value="6">6 класс</option>
+              <option value="7">7 класс</option>
+              <option value="8">8 класс</option>
+              <option value="9" selected>9 класс</option>
+              <option value="10">10 класс</option>
+              <option value="11">11 класс</option>
+            </select>
+            <div class="custom-input-wrapper">
+              <input type="text" id="classToCustom" placeholder="Свой класс...">
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Рамки программы</label>
+          <div class="radio-group">
+            <div class="radio-item">
+              <input type="radio" id="prog1" name="program" value="строго в рамках программы указанных классов" checked>
+              <label for="prog1">строго по программе</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="prog2" name="program" value="допускается выход за рамки программы с пояснением">
+              <label for="prog2">с выходом за рамки</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="prog3" name="program" value="только по явно указанным темам">
+              <label for="prog3">только указанные темы</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="prog4" name="program" value="расширенная программа (включая материал старших классов)">
+              <label for="prog4">расширенная программа</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="prog5" name="program" value="по программе физико-математического лицея">
+              <label for="prog5">программа физмат лицея</label>
+            </div>
+          </div>
+          <div class="custom-input-wrapper">
+            <input type="text" id="programCustom" placeholder="Свои рамки программы...">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Дополнительные ограничения по содержанию</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="scopeLimit1" name="scopeLimits" value="не использовать материал, не пройденный в указанных классах">
+              <label for="scopeLimit1">только пройденный материал</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="scopeLimit2" name="scopeLimits" value="допускаются задачи на стыке тем">
+              <label for="scopeLimit2">стык тем допустим</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="scopeLimit3" name="scopeLimits" value="можно использовать формулы из старших классов без доказательства">
+              <label for="scopeLimit3">формулы из старших классов</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="scopeLimit4" name="scopeLimits" value="векторный анализ и производные запрещены">
+              <label for="scopeLimit4">без высшей математики</label>
+            </div>
+          </div>
+          <div class="custom-input-wrapper">
+            <input type="text" id="scopeLimitCustom" placeholder="Свои ограничения по содержанию...">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. СТИЛЬ И ОФОРМЛЕНИЕ -->
+    <div class="form-section">
+      <h2 class="collapsible-header open" onclick="toggleCollapsible(this)">
+        <span><span class="section-icon">8</span> Стиль и оформление</span>
+        <span class="arrow">▼</span>
+      </h2>
+      <div class="collapsible-content open">
+        <div class="form-group">
+          <label>Стиль составления</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="style1" name="style" value="строгий" checked>
+              <label for="style1">строгий</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="style2" name="style" value="лаконичный" checked>
+              <label for="style2">лаконичный</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="style3" name="style" value="экзаменационный" checked>
+              <label for="style3">экзаменационный</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="style4" name="style" value="математически корректный" checked>
+              <label for="style4">математически корректный</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="style5" name="style" value="без разговорных фраз" checked>
+              <label for="style5">без разговорных фраз</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="style6" name="style" value="без лишних пояснений внутри условия" checked>
+              <label for="style6">без лишних пояснений</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="style7" name="style" value="научно-популярный">
+              <label for="style7">научно-популярный</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="style8" name="style" value="дружелюбный обучающий">
+              <label for="style8">дружелюбный обучающий</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="style9" name="style" value="с подсказками и наводящими вопросами">
+              <label for="style9">с подсказками</label>
+            </div>
+          </div>
+          <div class="custom-input-wrapper">
+            <input type="text" id="styleCustom" placeholder="Свой стиль...">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Тип заголовка</label>
+          <div class="radio-group">
+            <div class="radio-item">
+              <input type="radio" id="title1" name="titleFormat" value="Экзаменационный вариант" checked>
+              <label for="title1">Экзаменационный вариант</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="title2" name="titleFormat" value="Домашнее задание">
+              <label for="title2">Домашнее задание</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="title3" name="titleFormat" value="Контрольная работа">
+              <label for="title3">Контрольная работа</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="title4" name="titleFormat" value="Самостоятельная работа">
+              <label for="title4">Самостоятельная работа</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="title5" name="titleFormat" value="Пробный экзамен">
+              <label for="title5">Пробный экзамен</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="title6" name="titleFormat" value="Диагностическая работа">
+              <label for="title6">Диагностическая работа</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="title7" name="titleFormat" value="Тренировочный вариант">
+              <label for="title7">Тренировочный вариант</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="title8" name="titleFormat" value="Вступительное испытание">
+              <label for="title8">Вступительное испытание</label>
+            </div>
+          </div>
+          <div class="custom-input-wrapper">
+            <input type="text" id="titleCustom" placeholder="Свой тип заголовка...">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Уровень лицея / школы</label>
+          <select id="schoolLevel">
+            <option value="сильный физико-математический лицей уровня лицея при МИФИ" selected>лицей при МИФИ</option>
+            <option value="лицей при МГУ">лицей при МГУ</option>
+            <option value="лицей при ВШЭ">лицей при ВШЭ</option>
+            <option value="лицей при МФТИ">лицей при МФТИ</option>
+            <option value="сильная физико-математическая школа">сильная физмат школа</option>
+            <option value="обычная средняя школа">обычная школа</option>
+            <option value="профильный класс">профильный класс</option>
+            <option value="специализированный центр">специализированный центр</option>
+            <option value="школа с углублённым изучением физики">школа с углублённой физикой</option>
+            <option value="инженерный класс">инженерный класс</option>
+            <option value="центр «Сириус»">центр «Сириус»</option>
+          </select>
+          <div class="custom-input-wrapper">
+            <input type="text" id="schoolLevelCustom" placeholder="Свой уровень школы / лицея...">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Формат вывода</label>
+          <div class="radio-group">
+            <div class="radio-item">
+              <input type="radio" id="outFormat1" name="outFormat" value="текстовый список с нумерацией" checked>
+              <label for="outFormat1">текстовый список</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="outFormat2" name="outFormat" value="LaTeX-документ">
+              <label for="outFormat2">LaTeX</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="outFormat3" name="outFormat" value="Markdown">
+              <label for="outFormat3">Markdown</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="outFormat4" name="outFormat" value="HTML-страница">
+              <label for="outFormat4">HTML</label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Дополнительные требования к оформлению</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="fmtReq1" name="formatReqs" value="каждая задача — отдельный абзац">
+              <label for="fmtReq1">каждая задача — абзац</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="fmtReq2" name="formatReqs" value="указывать единицы измерения">
+              <label for="fmtReq2">единицы измерения</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="fmtReq3" name="formatReqs" value="нумерация пунктов внутри задач">
+              <label for="fmtReq3">нумерация пунктов</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="fmtReq4" name="formatReqs" value="разделители между задачами">
+              <label for="fmtReq4">разделители</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="fmtReq5" name="formatReqs" value="таблицы для данных">
+              <label for="fmtReq5">таблицы для данных</label>
+            </div>
+          </div>
+          <div class="custom-input-wrapper">
+            <input type="text" id="fmtReqCustom" placeholder="Свои требования к оформлению...">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. ОГРАНИЧЕНИЯ И КОНТРОЛЬ -->
+    <div class="form-section">
+      <h2 class="collapsible-header open" onclick="toggleCollapsible(this)">
+        <span><span class="section-icon">9</span> Ограничения и контроль</span>
+        <span class="arrow">▼</span>
+      </h2>
+      <div class="collapsible-content open">
+        <div class="form-group">
+          <label>Запреты</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="ban1" name="bans" value="не повторять один и тот же приём слишком много раз" checked>
+              <label for="ban1">не повторять приёмы</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="ban2" name="bans" value="не делать все задания исключительно вычислительными" checked>
+              <label for="ban2">не только вычисления</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="ban3" name="bans" value="не использовать темы, выходящие за рамки программы" checked>
+              <label for="ban3">не выходить за рамки</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="ban4" name="bans" value="не включать олимпиадную экзотику без явного указания" checked>
+              <label for="ban4">без олимпиадной экзотики</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="ban5" name="bans" value="не допускать задач с неоднозначной формулировкой" checked>
+              <label for="ban5">без неоднозначности</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="ban6" name="bans" value="не допускать слишком простых задач (если уровень не базовый)" checked>
+              <label for="ban6">без слишком простых</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="ban7" name="bans" value="не допускать несоответствия между уровнем и сложностью" checked>
+              <label for="ban7">соответствие уровню</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="ban8" name="bans" value="не использовать высшую математику" checked>
+              <label for="ban8">без высшей математики</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="ban9" name="bans" value="не использовать нереалистичные числовые данные">
+              <label for="ban9">без нереалистичных данных</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="ban10" name="bans" value="не допускать физически невозможных ситуаций">
+              <label for="ban10">без физически невозможных</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="ban11" name="bans" value="не использовать устаревшие единицы измерения">
+              <label for="ban11">без устаревших единиц</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="ban12" name="bans" value="не давать задачи с избыточными данными без указания">
+              <label for="ban12">без скрытых избыточных данных</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="ban13" name="bans" value="не использовать заимствования из конкретных сборников без переработки">
+              <label for="ban13">без прямого копирования</label>
+            </div>
+          </div>
+          <div class="custom-input-wrapper">
+            <input type="text" id="banCustom" placeholder="Свои запреты...">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Обязательные проверки</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="check1" name="checks" value="в задачах с параметром — проверка условий существования корней" checked>
+              <label for="check1">условия для параметра</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="check2" name="checks" value="в рациональных уравнениях и неравенствах — учёт ОДЗ" checked>
+              <label for="check2">учёт ОДЗ</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="check3" name="checks" value="в текстовых задачах — естественность модели и разумный ответ" checked>
+              <label for="check3">естественность модели</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="check4" name="checks" value="ответы проверены отдельно перед выводом" checked>
+              <label for="check4">проверка ответов</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="check5" name="checks" value="внутренняя согласованность и корректность всех задач" checked>
+              <label for="check5">согласованность</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="check6" name="checks" value="проверка размерностей во всех задачах">
+              <label for="check6">проверка размерностей</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="check7" name="checks" value="проверка граничных и предельных случаев">
+              <label for="check7">граничные случаи</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="check8" name="checks" value="проверка физической осмысленности ответа">
+              <label for="check8">физ. осмысленность</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="check9" name="checks" value="проверка единственности ответа">
+              <label for="check9">единственность ответа</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="check10" name="checks" value="перекрёстная проверка разными методами решения">
+              <label for="check10">перекрёстная проверка</label>
+            </div>
+          </div>
+          <div class="custom-input-wrapper">
+            <input type="text" id="checkCustom" placeholder="Свои обязательные проверки...">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10. ДОПОЛНИТЕЛЬНО -->
+    <div class="form-section">
+      <h2 class="collapsible-header open" onclick="toggleCollapsible(this)">
+        <span><span class="section-icon">10</span> Дополнительно</span>
+        <span class="arrow">▼</span>
+      </h2>
+      <div class="collapsible-content open">
+        <div class="form-group">
+          <label>Дополнительные пожелания <span class="hint">(необязательно)</span></label>
+          <textarea id="extraNotes" rows="3" placeholder="Например: включить задачи про нагревание воды, фазовые переходы, тепловой баланс в калориметре..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Распределение по типам содержания (по возможности)</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="cont1" name="content" value="преобразование выражений">
+              <label for="cont1">преобразования</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="cont2" name="content" value="вычисления с корнями">
+              <label for="cont2">вычисления с корнями</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="cont3" name="content" value="квадратные уравнения">
+              <label for="cont3">квадратные уравнения</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="cont4" name="content" value="рациональные уравнения">
+              <label for="cont4">рациональные уравнения</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="cont5" name="content" value="системы">
+              <label for="cont5">системы</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="cont6" name="content" value="неравенства">
+              <label for="cont6">неравенства</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="cont7" name="content" value="функции и графики">
+              <label for="cont7">функции и графики</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="cont8" name="content" value="задача с параметром">
+              <label for="cont8">с параметром</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="cont9" name="content" value="текстовая задача">
+              <label for="cont9">текстовая задача</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="cont10" name="content" value="геометрическая задача">
+              <label for="cont10">геометрическая</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="cont11" name="content" value="задача на доказательство">
+              <label for="cont11">на доказательство</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="cont12" name="content" value="комбинированная задача">
+              <label for="cont12">комбинированная</label>
+            </div>
+          </div>
+          <div class="custom-input-wrapper">
+            <input type="text" id="contCustom" placeholder="Свои типы содержания...">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Контекст и аудитория</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="ctx1" name="context" value="ученик готовится к поступлению">
+              <label for="ctx1">поступление</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="ctx2" name="context" value="ученик готовится к олимпиаде">
+              <label for="ctx2">олимпиада</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="ctx3" name="context" value="ученик готовится к экзамену">
+              <label for="ctx3">экзамен</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="ctx4" name="context" value="групповое занятие">
+              <label for="ctx4">групповое занятие</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="ctx5" name="context" value="индивидуальное занятие">
+              <label for="ctx5">индивидуальное</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="ctx6" name="context" value="дистанционное обучение">
+              <label for="ctx6">дистанционное</label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Особые указания к генерации</label>
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="gen1" name="generation" value="сгенерировать несколько вариантов">
+              <label for="gen1">несколько вариантов</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="gen2" name="generation" value="включить задачи-ловушки">
+              <label for="gen2">задачи-ловушки</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="gen3" name="generation" value="включить задачи с «красивым» ответом">
+              <label for="gen3">красивые ответы</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="gen4" name="generation" value="использовать реальные физические константы">
+              <label for="gen4">реальные константы</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="gen5" name="generation" value="привязка к повседневной жизни">
+              <label for="gen5">привязка к жизни</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" id="gen6" name="generation" value="исторические или занимательные факты">
+              <label for="gen6">занимательные факты</label>
+            </div>
+          </div>
+          <div class="custom-input-wrapper">
+            <input type="text" id="genCustom" placeholder="Свои особые указания...">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button type="button" class="btn-generate" onclick="generatePrompt()">
+      ✨ Сгенерировать промпт
+    </button>
+  </form>
+
+  <div class="output-section" id="outputSection">
+    <h2>📋 Готовый промпт</h2>
+    <div class="output-text" id="outputText"></div>
+    <button class="btn-copy" id="copyBtn" onclick="copyPrompt()">
+      📎 Скопировать промпт
+    </button>
+  </div>
+</div>
+
+<script>
+  function getCheckedValues(name) {
+    const checkboxes = document.querySelectorAll(`input[name="${name}"]:checked`);
+    return Array.from(checkboxes).map(cb => cb.value);
+  }
+
+  function getRadioValue(name) {
+    const radio = document.querySelector(`input[name="${name}"]:checked`);
+    return radio ? radio.value : '';
+  }
+
+  function toggleCollapsible(header) {
+    header.classList.toggle('open');
+    const content = header.nextElementSibling;
+    content.classList.toggle('open');
+  }
+
+  function addTopic(containerId) {
+    const container = document.getElementById(containerId);
+    const div = document.createElement('div');
+    div.className = 'topic-item';
+    div.innerHTML = `
+                <input type="text" value="" placeholder="Тема...">
+                <button type="button" class="remove-topic" onclick="removeTopic(this, '${containerId}')">×</button>
+            `;
+    container.appendChild(div);
+    div.querySelector('input').focus();
+  }
+
+  function removeTopic(btn, containerId) {
+    const container = document.getElementById(containerId);
+    if (container.children.length > 1) {
+      btn.parentElement.remove();
+    }
+  }
+
+  function getTopicsFromContainer(containerId) {
+    const inputs = document.querySelectorAll(`#${containerId} input[type="text"]`);
+    return Array.from(inputs).map(inp => inp.value.trim()).filter(v => v);
+  }
+
+  function generatePrompt() {
+    const subject = document.getElementById('subject').value;
+    const taskCount = document.getElementById('taskCount').value;
+    const difficulty = document.getElementById('difficulty').value;
+
+    const goalCustom = document.getElementById('goalCustom').value.trim();
+    const goal = goalCustom || document.getElementById('goal').value;
+
+    const examFormat = document.getElementById('examFormat').value;
+    const timeLimit = document.getElementById('timeLimit').value;
+    const variantNumber = document.getElementById('variantNumber').value;
+    const olymp = getRadioValue('olymp');
+
+    const requiredTopics = getTopicsFromContainer('requiredTopics');
+    const optionalTopics = getTopicsFromContainer('optionalTopics');
+
+    const includes = getCheckedValues('includes');
+    const skills = getCheckedValues('skills');
+    const advanced = getCheckedValues('advanced');
+
+    const easyRange = document.getElementById('easyRange').value.trim() || '1–2';
+    const mediumRange = document.getElementById('mediumRange').value.trim() || '3–4';
+    const hardRange = document.getElementById('hardRange').value.trim() || '5';
+    const distribution = getRadioValue('distribution');
+
+    const output = getCheckedValues('output');
+
+    // Пункт 7
+    const classFromCustom = document.getElementById('classFromCustom').value.trim();
+    const classFrom = classFromCustom || document.getElementById('classFrom').value;
+    const classToCustom = document.getElementById('classToCustom').value.trim();
+    const classTo = classToCustom || document.getElementById('classTo').value;
+
+    const programCustom = document.getElementById('programCustom').value.trim();
+    const program = programCustom || getRadioValue('program');
+
+    const scopeLimits = getCheckedValues('scopeLimits');
+    const scopeLimitCustom = document.getElementById('scopeLimitCustom').value.trim();
+
+    // Пункт 8
+    const styleCustom = document.getElementById('styleCustom').value.trim();
+    const style = getCheckedValues('style');
+    if (styleCustom) style.push(styleCustom);
+
+    const titleCustom = document.getElementById('titleCustom').value.trim();
+    const titleFormat = titleCustom || getRadioValue('titleFormat');
+
+    const schoolLevelCustom = document.getElementById('schoolLevelCustom').value.trim();
+    const schoolLevel = schoolLevelCustom || document.getElementById('schoolLevel').value;
+
+    const outFormat = getRadioValue('outFormat');
+    const formatReqs = getCheckedValues('formatReqs');
+    const fmtReqCustom = document.getElementById('fmtReqCustom').value.trim();
+
+    // Пункт 9
+    const banCustom = document.getElementById('banCustom').value.trim();
+    const bans = getCheckedValues('bans');
+    if (banCustom) bans.push(banCustom);
+
+    const checkCustom = document.getElementById('checkCustom').value.trim();
+    const checks = getCheckedValues('checks');
+    if (checkCustom) checks.push(checkCustom);
+
+    // Пункт 10
+    const extraNotes = document.getElementById('extraNotes').value.trim();
+    const contCustom = document.getElementById('contCustom').value.trim();
+    const content = getCheckedValues('content');
+    if (contCustom) content.push(contCustom);
+
+    const context = getCheckedValues('context');
+    const genCustom = document.getElementById('genCustom').value.trim();
+    const generation = getCheckedValues('generation');
+    if (genCustom) generation.push(genCustom);
+
+    // Build includes text
+    function includesText(items) {
+      const map = {
+        'задания с параметром': 'да',
+        'текстовые задачи': 'да',
+        'графики и функции': 'да',
+        'системы уравнений/неравенств': 'задачи допускают составление систем уравнений',
+        'экспериментальные задачи': 'да',
+        'качественные вопросы': 'да',
+        'расчётные задачи': 'да',
+        'задачи на анализ графиков': 'да',
+        'задачи на оценку и порядок величин': 'да',
+        'задачи с неоднозначными данными': 'да'
+      };
+      const allKeys = Object.keys(map);
+      let lines = [];
+      allKeys.forEach(key => {
+        if (items.includes(key)) {
+          lines.push(`- Нужно ли включать ${key}: ${map[key]}`);
+        } else {
+          lines.push(`- Нужно ли включать ${key}: нет`);
+        }
+      });
+      return lines.join('\n');
+    }
+
+    let prompt = `Ты — опытный преподаватель ${subject}, методист и составитель вступительных испытаний в ${schoolLevel}.
+
+
+
+Составь ${titleFormat.toLowerCase()} по ${subject}
+
+
+
+## Параметры варианта
+
+- Предмет: ${subject}
+- Разделы: ${requiredTopics.join(', ')}
+- Количество задач: ${taskCount}
+- Общий уровень сложности: ${difficulty}
+- Цель варианта: ${goal}
+- Формат экзамена: ${examFormat}
+- Время на выполнение: ${timeLimit}
+${includesText(includes)}
+- Нужны ли ответы: ${output.includes('ответы') ? 'да' : 'нет'}
+- Нужны ли полные решения: ${output.includes('полные решения') ? 'да' : 'нет'}
+- Нужны ли краткие указания/идеи решения: ${output.includes('краткие указания/идеи решения') ? 'да' : 'нет'}
+- Нужны ли критерии оценивания: ${output.includes('критерии оценивания') ? 'да' : 'нет'}
+- Нужна ли разбалловка: ${output.includes('разбалловка') ? 'да' : 'нет'}
+- Олимпиадность: ${olymp}
+- Формат вывода: ${outFormat}
+${context.length > 0 ? '- Контекст: ' + context.join(', ') : ''}
+${generation.length > 0 ? '- Особые указания к генерации: ' + generation.join(', ') : ''}
+
+
+
+## Требования к содержанию
+
+Содержание варианта должно быть близким к вступительным испытаниям в сильный математический лицей:
+
+1. Проверять не только знание формул, но и:
+${skills.map(s => '  - ' + s + ',').join('\n')}
+
+2. Задания должны быть типовыми по тематике, но сильными по исполнению.
+
+3. Вариант должен быть сбалансирован по темам и нарастающим по трудности.
+
+4. Не делай все задачи одинакового типа.
+
+5. Избегай слишком простых школьных шаблонов уровня «решается в одно действие», если уровень сложности не равен «базовый».
+
+${advanced.length > 0 ? `6. Если уровень высокий, включай задачи, где требуется:
+${advanced.map(a => '  - ' + a + ',').join('\n')}
+` : ''}
+
+7. Все формулировки должны быть экзаменационными, чёткими и без лишней воды.
+
+
+
+## Тематическое наполнение
+
+Обязательно покрой темы из списка:
+
+${requiredTopics.map(t => '- ' + t).join('\n')}
+
+${optionalTopics.length > 0 ? `Дополнительно можно включить:
+
+${optionalTopics.map(t => '- ' + t).join('\n')}
+` : ''}
+
+${content.length > 0 ? `Распредели задачи так, чтобы были представлены, по возможности:
+${content.map(c => '- ' + c + ',').join('\n')}
+` : ''}
+
+## Структура сложности
+
+Построй вариант по принципу «${distribution}»:
+
+- задачи ${easyRange} — уверенный базовый/средний уровень;
+- задачи ${mediumRange} — повышенный уровень;
+- задачи ${hardRange} — высокий вступительный уровень.
+
+
+
+## Рамки программы
+
+- Класс, из которого приходит ученик: ${classFrom} класс.
+- Класс, в который поступает / для которого составлен вариант: ${classTo} класс.
+- Рамки программы: ${program}.
+${scopeLimits.length > 0 ? '- Дополнительные ограничения по содержанию:\n' + scopeLimits.map(s => '  - ' + s + ';').join('\n') : ''}
+${scopeLimitCustom ? '- ' + scopeLimitCustom : ''}
+
+
+
+## Ограничения
+
+${bans.map(b => '- ' + b + '.').join('\n')}
+- Следи, чтобы задачи были решаемы школьником сильного уровня без высшей математики.
+- Ответы должны быть корректными, однозначными и проверенными.
+
+
+
+## Обязательные проверки
+
+${checks.map(c => '- ' + c + '.';).join('\n')}
+
+
+
+## Требования к оформлению
+
+Оформи результат в следующем виде:
+
+
+
+1. Заголовок:
+  - «${titleFormat} по ${subject}»
+  - «${classFrom} класс → ${classTo} класс»
+  - «Вариант ${variantNumber}»
+
+
+
+2. Затем приведи все ${taskCount} задач с нумерацией.
+
+${formatReqs.length > 0 ? `Дополнительные требования к оформлению:
+${formatReqs.map(f => '- ' + f + ';').join('\n')}
+${fmtReqCustom ? '- ' + fmtReqCustom : ''}
+` : ''}
+
+${output.includes('ответы') ? `3. После варианта добавь раздел:
+  - «Ответы»
+` : ''}${output.includes('краткие указания/идеи решения') ? `4. После ответов добавь раздел:
+  - «Краткие указания»
+` : ''}${output.includes('полные решения') ? `5. После этого добавь раздел:
+  - «Полные решения»
+` : ''}${output.includes('критерии оценивания') ? `6. Добавь:
+  - критерии проверки,
+  - типичные ошибки${output.includes('типичные ошибки') ? ' (отдельно)' : ''},
+  - за что снимать баллы.
+` : ''}${output.includes('разбалловка') ? `7. Предложи разумную схему оценивания по задачам.
+` : ''}${output.includes('комментарии к каждому заданию') ? `8. Добавь комментарии к каждому заданию (что проверяет, на что обратить внимание).
+` : ''}${output.includes('рекомендации по подготовке') ? `${output.includes('комментарии к каждому заданию') ? '9' : '8'}. Добавь рекомендации по подготовке (какие темы повторить, на что обратить внимание).
+` : ''}
+
+
+## Стиль составления
+
+Стиль должен быть:
+${style.map(s => '- ' + s + ',').join('\n')}
+
+
+
+## Важно:
+
+- Не допускай задач с неоднозначной формулировкой.
+- Не допускай задач, которые случайно оказываются слишком простыми.
+- Не допускай несоответствия между уровнем лицея и сложностью варианта.
+- В задачах с параметром обязательно проверь условия существования корней и требуемые ограничения на них.
+- В рациональных уравнениях и неравенствах обязательно учитывай ОДЗ.
+- В текстовых задачах следи, чтобы модель была естественной и приводила к красивому или разумному ответу.
+- Ответы проверь отдельно перед выводом.
+
+
+
+## Дополнительная настройка
+
+Учти следующие пожелания:
+
+${extraNotes || '(дополнительных пожеланий нет)'}
+
+
+
+Сначала выдай сам вариант.
+Потом, если требуется по настройкам, выдай ответы, указания, решения и критерии.
+Проверь внутреннюю согласованность и корректность всех задач перед выводом.`;
+
+    document.getElementById('outputText').textContent = prompt;
+    document.getElementById('outputSection').classList.add('visible');
+    document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function copyPrompt() {
+    const text = document.getElementById('outputText').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✅ Скопировано!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '📎 Скопировать промпт';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+</script>
+</body>
+</html>
